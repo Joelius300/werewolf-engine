@@ -1,10 +1,9 @@
-fn main() {
-}
+fn main() {}
 
 struct Werewolf {}
 impl Role for Werewolf {
     fn get_night_action(&self, game: &Game) -> Option<Box<dyn PendingAction>> {
-        WerewolfNightAction::default()
+        Some(Box::new(WerewolfNightAction::default()))
     }
 }
 
@@ -16,14 +15,29 @@ impl PendingAction for WerewolfNightAction {
     }
 
     fn submit_input(&self, input: Box<dyn InputSubmission>) -> Box<dyn ReadyAction> {
-        Box::new(WerewolfNightActionReady::new(input))
+        input.prepare_action()
     }
 }
 
-struct WerewolfNightActionReady {}
-impl ReadyAction for WerewolfNightActionReady {
+struct WerewolfNightActionReady<'a> {
+    input: &'a WerewolfNightActionSubmission<'a>,
+}
+impl<'d> ReadyAction for WerewolfNightActionReady<'d> {
     fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c> {
-        
+        let mut new_players = game.players.clone();
+        if let Some(killed_player) = self.input.target {
+            let killed_player_index = game
+                .players
+                .iter()
+                .position(|p| p == killed_player)
+                .expect("killed Player to be one of the Players");
+            new_players.remove(killed_player_index);
+        }
+
+        Game::<'c> {
+            players: new_players,
+            pending_action: None,
+        }
     }
 }
 
@@ -32,25 +46,27 @@ struct WerewolfNightActionSchema {}
 impl InputSchema for WerewolfNightActionSchema {}
 
 struct WerewolfNightActionSubmission<'a> {
-    target: Option<&'a Player<'a>>
+    target: Option<&'a Player<'a>>,
 }
 impl<'a> WerewolfNightActionSubmission<'a> {
-    pub fn new(target: Option<&Player>) -> Self {
-        WerewolfNightActionSubmission {
-            target
-        }
+    pub fn new(target: Option<&'a Player>) -> Self {
+        WerewolfNightActionSubmission { target }
     }
 }
-impl<'a> InputSubmission for WerewolfNightActionSubmission<'a> {}
+impl<'a> InputSubmission for WerewolfNightActionSubmission<'a> {
+    fn prepare_action(&self) -> Box<dyn ReadyAction> {
+        Box::new(WerewolfNightActionReady { input: self })
+    }
+}
 
 struct Game<'a> {
     players: Vec<Player<'a>>,
-    pending_action: Box<dyn PendingAction>,
+    pending_action: Option<Box<dyn PendingAction>>,
 }
 
 impl<'a> Game<'a> {
     pub fn submit_input(self, input: Box<dyn InputSubmission>) -> Self {
-        let ready_action = self.pending_action.submit_input(input);
+        let ready_action = self.get_pending_action().submit_input(input);
 
         let mut game = ready_action.transform(self);
         game.pending_action = game.get_next_action();
@@ -59,16 +75,32 @@ impl<'a> Game<'a> {
     }
 
     pub fn get_input_schema(&self) -> Box<dyn InputSchema> {
-        self.pending_action.get_input_schema(self)
+        self.get_pending_action().get_input_schema(self)
     }
 
-    fn get_next_action(&self) -> Box<dyn PendingAction> {
+    fn get_next_action(&self) -> Option<Box<dyn PendingAction>> {
         unimplemented!()
+    }
+
+    fn get_pending_action(&self) -> &Box<dyn PendingAction> {
+        if let Some(pending_action) = &self.pending_action {
+            pending_action
+        } else {
+            panic!("No pending action. TODO this should probably be a result instead.")
+        }
     }
 }
 
+#[derive(Clone)]
 struct Player<'a> {
+    name: String, // unique
     roles: Vec<&'a dyn Role>,
+}
+
+impl<'a> PartialEq for Player<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
+    }
 }
 
 trait Role {
@@ -90,4 +122,6 @@ trait ReadyAction {
 }
 
 trait InputSchema {}
-trait InputSubmission {}
+trait InputSubmission {
+    fn prepare_action(&self) -> Box<dyn ReadyAction>;
+}
