@@ -50,10 +50,10 @@ impl PendingAction for WerewolfNightAction {
 }
 
 struct WerewolfNightActionReady<'a> {
-    input: Box<WerewolfNightActionSubmission<'a>>,
+    input: &'a WerewolfNightActionSubmission<'a>,
 }
 impl<'d> ReadyAction for WerewolfNightActionReady<'d> {
-    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c>
+    fn transform<'a, 'b, 'c>(&'a self, game: &Game<'b>) -> Game<'c>
     where
         'b: 'c,
     {
@@ -87,7 +87,7 @@ impl<'a> WerewolfNightActionSubmission<'a> {
     }
 }
 impl<'a> InputSubmission<'a> for WerewolfNightActionSubmission<'a> {
-    fn prepare_action(self: Box<WerewolfNightActionSubmission<'a>>) -> Box<dyn ReadyAction + 'a> {
+    fn prepare_action(&self) -> Box<dyn ReadyAction + 'a> {
         Box::new(WerewolfNightActionReady::<'a> { input: self })
     }
 }
@@ -112,7 +112,7 @@ impl<'a> Game<'a> {
     pub fn submit_input(self, input: Box<dyn InputSubmission>) -> Self {
         let ready_action = self.get_pending_action().submit_input(input);
 
-        let mut game = ready_action.transform(self);
+        let mut game = ready_action.transform(&self);
         game.pending_action = game.get_next_action();
 
         game
@@ -164,12 +164,12 @@ trait ReadyAction {
     // has to outlive the return value so that 1 it doesn't think the return value is connected to
     // self and 2 probably something about moving otherwise I don't understand why it's necessary
     // given that the method consumes the game parameter anyway. I'm still a rust noob after all.
-    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c>
+    fn transform<'a, 'b, 'c>(&'a self, game: &'b Game<'b>) -> Game<'c>
     where
         'b: 'c;
 }
 
 trait InputSchema {}
 trait InputSubmission<'a> {
-    fn prepare_action(self: Box<Self>) -> Box<dyn ReadyAction + 'a>;
+    fn prepare_action(&self) -> Box<dyn ReadyAction + 'a>;
 }
