@@ -2,7 +2,7 @@ fn main() {}
 
 struct Werewolf {}
 impl Role for Werewolf {
-    fn get_night_action(&self, game: &Game) -> Option<Box<dyn PendingAction>> {
+    fn get_night_action(&self, _game: &Game) -> Option<Box<dyn PendingAction>> {
         Some(Box::new(WerewolfNightAction::default()))
     }
 }
@@ -10,20 +10,23 @@ impl Role for Werewolf {
 #[derive(Default)]
 struct WerewolfNightAction {}
 impl PendingAction for WerewolfNightAction {
-    fn get_input_schema(&self, game: &Game) -> Box<dyn InputSchema> {
+    fn get_input_schema(&self, _game: &Game) -> Box<dyn InputSchema> {
         Box::new(WerewolfNightActionSchema::default())
     }
 
-    fn submit_input(&self, input: Box<dyn InputSubmission>) -> Box<dyn ReadyAction> {
+    fn submit_input<'a>(&self, input: Box<dyn InputSubmission + 'a>) -> Box<dyn ReadyAction + 'a> {
         input.prepare_action()
     }
 }
 
 struct WerewolfNightActionReady<'a> {
-    input: &'a WerewolfNightActionSubmission<'a>,
+    input: Box<WerewolfNightActionSubmission<'a>>,
 }
 impl<'d> ReadyAction for WerewolfNightActionReady<'d> {
-    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c> {
+    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c>
+    where
+        'b: 'c,
+    {
         let mut new_players = game.players.clone();
         if let Some(killed_player) = self.input.target {
             let killed_player_index = game
@@ -34,7 +37,7 @@ impl<'d> ReadyAction for WerewolfNightActionReady<'d> {
             new_players.remove(killed_player_index);
         }
 
-        Game::<'c> {
+        Game {
             players: new_players,
             pending_action: None,
         }
@@ -53,9 +56,10 @@ impl<'a> WerewolfNightActionSubmission<'a> {
         WerewolfNightActionSubmission { target }
     }
 }
-impl<'a> InputSubmission for WerewolfNightActionSubmission<'a> {
-    fn prepare_action(&self) -> Box<dyn ReadyAction> {
-        Box::new(WerewolfNightActionReady { input: self })
+impl<'a> InputSubmission<'a> for WerewolfNightActionSubmission<'a> {
+    fn prepare_action(self: Box<WerewolfNightActionSubmission<'a>>) -> Box<dyn ReadyAction + 'a>
+    {
+        Box::new(WerewolfNightActionReady::<'a> { input: self })
     }
 }
 
@@ -105,7 +109,7 @@ impl<'a> PartialEq for Player<'a> {
 
 trait Role {
     // TODO the role should know where to put the night_action in the execution order for the night
-    fn get_night_action(&self, game: &Game) -> Option<Box<dyn PendingAction>> {
+    fn get_night_action(&self, _game: &Game) -> Option<Box<dyn PendingAction>> {
         unimplemented!();
     }
 }
@@ -116,12 +120,16 @@ trait PendingAction {
 }
 
 trait ReadyAction {
-    // it took a while but you have to tell the compiler explicitly that none of these arguments
-    // or return types are connected, otherwise it'll think the returned game is connected to self.
-    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c>;
+    // it took a while but you have to tell the compiler explicitly that only the game parameter
+    // has to outlive the return value so that 1 it doesn't think the return value is connected to
+    // self and 2 probably something about moving otherwise I don't understand why it's necessary
+    // given that the method consumes the game parameter anyway. I'm still a rust noob after all.
+    fn transform<'a, 'b, 'c>(&'a self, game: Game<'b>) -> Game<'c>
+    where
+        'b: 'c;
 }
 
 trait InputSchema {}
-trait InputSubmission {
-    fn prepare_action(&self) -> Box<dyn ReadyAction>;
+trait InputSubmission<'a> {
+    fn prepare_action(self: Box<Self>) -> Box<dyn ReadyAction + 'a>;
 }
