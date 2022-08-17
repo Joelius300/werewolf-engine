@@ -1,5 +1,35 @@
-fn main() {}
+/* TODOs
+ * - try to use generics for example the night actions might benefit from them but you
+ *   need non-generic traits as well otherwise you'll be in Any hell which you'd love to avoid
+ * - take less ownership of things. Maybe moving is nice for performance and consuming is nice for
+ *   semantics but in the end it just makes things more complicated and since you're calling from
+ *   dart which owns all the variables anyway, it may even cause issues.
+ */
 
+fn main() {
+    let all_roles = vec![Werewolf::default()];
+    let mut history = vec![];
+    let mut game = Game {
+        players: vec![Player {
+            name: "Joel".to_owned(),
+            roles: vec![&all_roles[0]],
+        }],
+        pending_action: None,
+    };
+
+    loop {
+        history.push(game);
+        let input_schema = game.get_input_schema();
+        let input = request_input(input_schema.as_ref());
+        game = game.submit_input(input);
+    }
+}
+
+fn request_input(input_schema: &dyn InputSchema) -> Box<dyn InputSubmission<'static>> {
+    unimplemented!();
+}
+
+#[derive(Default)]
 struct Werewolf {}
 impl Role for Werewolf {
     fn get_night_action(&self, _game: &Game) -> Option<Box<dyn PendingAction>> {
@@ -57,8 +87,7 @@ impl<'a> WerewolfNightActionSubmission<'a> {
     }
 }
 impl<'a> InputSubmission<'a> for WerewolfNightActionSubmission<'a> {
-    fn prepare_action(self: Box<WerewolfNightActionSubmission<'a>>) -> Box<dyn ReadyAction + 'a>
-    {
+    fn prepare_action(self: Box<WerewolfNightActionSubmission<'a>>) -> Box<dyn ReadyAction + 'a> {
         Box::new(WerewolfNightActionReady::<'a> { input: self })
     }
 }
@@ -69,6 +98,17 @@ struct Game<'a> {
 }
 
 impl<'a> Game<'a> {
+    pub fn initialize(players: Vec<Player>) -> Game {
+        let mut game = Game {
+            players,
+            pending_action: None,
+        };
+
+        game.pending_action = game.get_next_action();
+
+        game
+    }
+
     pub fn submit_input(self, input: Box<dyn InputSubmission>) -> Self {
         let ready_action = self.get_pending_action().submit_input(input);
 
