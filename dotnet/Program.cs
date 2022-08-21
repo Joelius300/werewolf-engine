@@ -103,6 +103,24 @@ class WerewolfNightAction : IPendingAction<WerewolfInputRequest, WerewolfInputSu
      *   queue for the next night during the current one.
      * - there also needs to be a mechanism for jump in actions like the great-werewolf but for starters you can just
      *   create an action with a request that's just yes or no.
+     *
+     * Frs Werwöuflä züg zuäsätzläch no Effects wobi ei effect Silenced (Oger) chönnt si. I Zuäkunft ä angerä de Drunk.
+     * Effects si persistent im gägäsatz zu tags und müässä explizit entfernt wärdä.
+     * Wi o Master Tags si Effects Grundsätzlächi Sachä fr Spiufunktionalität u müässä haut fix programmiert wärdä
+     * Auternativ chönnt mä o zwöi sachä ha wöu zmingst fr diä App bruchts ke Logik fr silenced aso d Tag abstimmigä si
+     * ja nid ir App, es wär meh ä Info aber wes so weni si chamä sä o code würdi bhouptä.
+     * Vergiss dä string centrisch approach viläch wider chli, ömu am Afang.
+     * Wedä ä schöni Api machsch chamä o guät mit chli typesafety arbeitä bim Tag und Effekt registriere, etc.
+     * Wichtig isch aber o dasdä nid uf Types ufbousch ussert es chönntä enums si.
+     * Mit däm meini dasdä nid type/interface tests mit "is" machsch wöu Rust cha das nid. MasterTags und Effects chöi widerum Enums si.
+     * Zu dr queue fr diä Nacht bruchsch ono ä Queue womä fr Nacht N cha actions dri tuä wo jedi nacht z N abägeit und wes uf 0 isch
+     * (oder si blibt fix u mä luägt uf d Nacht vom Game wo immer ufä geit) denn wird si id Nacht queue inä ta.
+     * Apropos Nachtqueue, dr augorithnus fr nä reihäfoug z fingä sött äuä so irgendwiä si oder das wär ömu ä idee:
+     * jedi action definiert actions wo vorhär bzw. nächär müässä passiere, dependencies quasi.
+     * När geit mä dürä und suächt aui diä wo ke vorhär dependency hei und wäut einä, när suächt mä aui wo mit dr aktuellä queue
+     * no chönntä cho und wäut wider eis bli bla blu. Wemä uf eis trifft wo nümm ine cha denn backtrackt mä.
+     * Glichzitig darfmä natürläch numä serigi näh wo keni "nächär" beziehig vorä angärä noni enqueutä Action si.
+     * Wemä bis am Schluss ke müglächä wäg fingt schisster säch haut ii.
      */
     public Game Transform(Game game)
     {
@@ -163,7 +181,6 @@ public static class ReadOnlyListExtensions
 
 record Player(string Name, PlayerState State, IReadOnlyList<IRole> Roles)
 {
-    
 }
 
 enum PlayerState
