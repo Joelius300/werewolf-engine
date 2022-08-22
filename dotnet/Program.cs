@@ -6,18 +6,6 @@ Console.WriteLine("Hello, World!");
 
 // Just FYI, "with" creates a shallow copy!
 
-class WerewolfNightAction : IPendingAction<WerewolfInputRequest, WerewolfInputSubmission>, IReadyAction
-{
-    private WerewolfInputSubmission? _input;
-
-    public WerewolfInputRequest GetInputRequest() => new();
-
-    public IReadyAction MakeReady(WerewolfInputSubmission input)
-    {
-        _input = input;
-        return this;
-    }
-
     // Note: These transformations should happen after all the actions are made ready.
     /* It should be like some kind of collapse. First all the inputs are collected in an order that makes sense
      * but isn't critical. With every input the action is made ready which also validates the input. Then when all
@@ -126,6 +114,19 @@ class WerewolfNightAction : IPendingAction<WerewolfInputRequest, WerewolfInputSu
      * Glichzitig darfmä natürläch numä serigi näh wo keni "nächär" beziehig vorä angärä noni enqueutä Action si.
      * Wemä bis am Schluss ke müglächä wäg fingt schisster säch haut ii.
      */
+
+class WerewolfNightAction : IPendingAction<WerewolfInputRequest, WerewolfInputSubmission>, IReadyAction
+{
+    private WerewolfInputSubmission? _input;
+
+    public WerewolfInputRequest GetInputRequest() => new();
+
+    public IReadyAction MakeReady(WerewolfInputSubmission input)
+    {
+        _input = input;
+        return this;
+    }
+
     public Game Transform(Game game)
     {
         if (_input is null)
