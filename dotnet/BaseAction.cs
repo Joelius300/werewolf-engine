@@ -7,7 +7,7 @@ public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingActi
 {
     public Player ResponsiblePlayer { get; }
     public IRole ResponsibleRole { get; }
-    protected TInputSubmission Input { get; set; }
+    protected TInputSubmission? Input { get; set; }
 
     protected BaseAction(Player responsiblePlayer, IRole responsibleRole)
     {

@@ -4,8 +4,9 @@ namespace WerewolfEngine;
 
 public record Game(PlayerCircle Players)
 {
-    public IImmutableList<IPendingAction<IInputRequest, IInputSubmission>> PendingActions { get; init; }
-    public IImmutableList<IReadyAction> PastActions { get; init; }
+    public IImmutableList<IPendingAction<IInputRequest, IInputSubmission>> PendingActions { get; init; } =
+        ImmutableArray<IPendingAction<IInputRequest, IInputSubmission>>.Empty;
+    public IImmutableList<IReadyAction> PastActions { get; init; } = ImmutableArray<IReadyAction>.Empty;
 
     public Game SubmitInput(IInputSubmission input)
     {
