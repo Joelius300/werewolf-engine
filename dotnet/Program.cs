@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 
 Console.WriteLine("Hello, World!");
 
+// Just FYI, "with" creates a shallow copy!
+
 class WerewolfNightAction : IPendingAction<WerewolfInputRequest, WerewolfInputSubmission>, IReadyAction
 {
     private WerewolfInputSubmission? _input;
@@ -169,7 +171,7 @@ record Game(PlayerCircle Players)
         return game with {PendingActions = actions};
     }
 
-    public Game UpdatePlayer(Player updatedPlayer) => new(Players.UpdatePlayer(updatedPlayer));
+    public Game UpdatePlayer(Player updatedPlayer) => this with {Players = Players.UpdatePlayer(updatedPlayer)};
     public Game KillPlayer(string name) => UpdatePlayer(Players[name].Kill());
 }
 
