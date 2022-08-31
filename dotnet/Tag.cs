@@ -5,17 +5,10 @@ public class Tag : IEquatable<Tag>
     public string Identifier { get; }
     public IReadyAction? CausingAction { get; }
 
-    public virtual object? Parameter { get; }
-
     public Tag(string identifier, IReadyAction? causingAction)
     {
         Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
         CausingAction = causingAction;
-    }
-
-    public Tag(string identifier, IReadyAction? causingAction, object parameter) : this(identifier, causingAction)
-    {
-        Parameter = parameter ?? throw new ArgumentNullException(nameof(parameter));
     }
 
     public bool Equals(Tag? other)
