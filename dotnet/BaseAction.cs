@@ -1,13 +1,13 @@
 namespace WerewolfEngine;
 
-public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingAction<TInputRequest, TInputSubmission>,
+public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingAction<TInputRequest, TInputSubmission>, IPendingAction<IInputRequest, IInputSubmission>,
     IReadyAction
     where TInputRequest : IInputRequest
-    where TInputSubmission : IInputSubmission
+    where TInputSubmission : class, IInputSubmission
 {
     public Player ResponsiblePlayer { get; }
     public IRole ResponsibleRole { get; }
-    protected TInputSubmission? Input { get; set; }
+    protected TInputSubmission? Input { get; private set; }
 
     protected BaseAction(Player responsiblePlayer, IRole responsibleRole)
     {
@@ -15,7 +15,7 @@ public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingActi
         ResponsibleRole = responsibleRole;
     }
 
-    public abstract Game Transform(Game game);
+    protected abstract Game Transform(Game game);
 
     Game IReadyAction.Transform(Game game)
     {
@@ -27,10 +27,15 @@ public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingActi
     }
 
     public abstract TInputRequest GetInputRequest();
+    
+    IInputRequest IPendingAction<IInputRequest, IInputSubmission>.GetInputRequest() => GetInputRequest();
+    IReadyAction IPendingAction<IInputRequest, IInputSubmission>.MakeReady(IInputSubmission input) => MakeReady((input as TInputSubmission)!);
 
     public virtual IReadyAction MakeReady(TInputSubmission input)
     {
-        Input = input;
+        Input = input ?? throw new ArgumentNullException(nameof(input));
         return this;
     }
+
+    protected Tag CreateTag(string tag) => new(tag, this);
 }

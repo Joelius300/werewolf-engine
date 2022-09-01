@@ -1,6 +1,6 @@
 namespace WerewolfEngine;
 
-public class WerewolfNightAction : BaseAction<WerewolfInputRequest, WerewolfInputSubmission>
+public class WerewolfNightAction : BaseAction<WerewolfInputRequest, WerewolfInputSubmission>, IEquatable<WerewolfNightAction>
 {
     public WerewolfNightAction(Player responsiblePlayer, IRole responsibleRole) : base(responsiblePlayer,
         responsibleRole)
@@ -8,7 +8,14 @@ public class WerewolfNightAction : BaseAction<WerewolfInputRequest, WerewolfInpu
     }
 
     public override WerewolfInputRequest GetInputRequest() => new();
+
+
+    protected override Game Transform(Game game) => game.TagPlayer(Input!.Target, CreateTag(Werewolf.KilledByWerewolf));
     
-    // TODO instead of killing the player here, only mark them with a killed_by_werewolf tag (defined by the role itself)
-    public override Game Transform(Game game) => game.KillPlayer(Input!.Target);
+    // For Werewolf action, we only care about the type as there can only be one Werewolf action per Night.
+    public bool Equals(WerewolfNightAction? other) => other?.GetType() == GetType();
+    public override bool Equals(object? obj) => Equals(obj as WerewolfNightAction);
+    public override int GetHashCode() => 0;
+    public static bool operator ==(WerewolfNightAction? left, WerewolfNightAction? right) => Equals(left, right);
+    public static bool operator !=(WerewolfNightAction? left, WerewolfNightAction? right) => !Equals(left, right);
 }
