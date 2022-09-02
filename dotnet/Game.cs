@@ -24,14 +24,16 @@ public record Game(PlayerCircle Players)
         {
             // phase (night or day) is over, collapse all the tags
             game = game.CollapseTags();
-            game = game with {PendingActions = game.PendingActions.Add(new DayAction(game))};
+            // game = game with {PendingActions = game.PendingActions.Add(new DayAction(game))};
         }
         
         return game;
     }
 
+    
     private Game CollapseTags()
     {
+        return null;
         // TODO okay I think instead of this monstrosity we need a TagSet (can transform into another TagSet by copying
         // the tags (and their meta-info, that's the whole point) of the other set (union) and add the missing ones and
         // delete the unnecesary ones), then a Rule which is a transformation of one TagSet to another (maybe transformation
@@ -40,6 +42,8 @@ public record Game(PlayerCircle Players)
         // is a collection of rules with an algorithm to determine the best rule to use for a given player TagSet (this
         // is covered in another comment in Program.cs I think but just explicit first (only one allowed), then the longest
         // non-explicit one. MasterTags can only be alone so a TagSet is collapsed into a single MasterTag in the end.
+
+        /*
         var rules = new Dictionary<int, Dictionary<HashSet<Tag>, Func<IImmutableSet<Tag>, IImmutableSet<Tag>>>>
         {
             {
@@ -60,6 +64,7 @@ public record Game(PlayerCircle Players)
         {
             player.Tags
         }
+        */
     }
 
     private static Game BuildActionQueue(Game game)

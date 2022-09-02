@@ -1,5 +1,26 @@
-﻿Console.WriteLine("Hello, World!");
+﻿using WerewolfEngine;
 
+const string YoMam = "dini mam";
+
+Rule rule = new(new(TemplateTag(Werewolf.KilledByWerewolf), TemplateTag(YoMam)),
+ new(TemplateTag(Werewolf.KilledByWerewolf)), Explicit: true);
+
+TagSet playerTags = new(new(Werewolf.KilledByWerewolf, new WerewolfNightAction(null!, null!)),
+ new(YoMam, new WerewolfNightAction(null!, null!)));
+
+Console.WriteLine($"Rule matches: {rule.Matches(playerTags)}");
+
+Console.WriteLine($"Tags before collapse: {playerTags}");
+Console.WriteLine($"From: {rule.From} / To: {rule.To}");
+
+var newTags = rule.Collapse(playerTags);
+Console.WriteLine($"Collapsed Tags: {newTags}");
+Console.WriteLine($"Tags after collapse (should be the same still): {playerTags}");
+Console.WriteLine($"From: {rule.From} / To: {rule.To}");
+
+
+
+Tag TemplateTag(string tagId) => new(tagId, null);
 // Just FYI, "with" creates a shallow copy!
 
 // Note: These transformations should happen after all the actions are made ready.

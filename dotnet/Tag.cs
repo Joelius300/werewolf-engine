@@ -23,4 +23,6 @@ public class Tag : IEquatable<Tag>
     public override int GetHashCode() => Identifier.GetHashCode();
     public static bool operator ==(Tag? left, Tag? right) => Equals(left, right);
     public static bool operator !=(Tag? left, Tag? right) => !Equals(left, right);
+
+    public override string ToString() => $"[{Identifier}, {CausingAction}]";
 }

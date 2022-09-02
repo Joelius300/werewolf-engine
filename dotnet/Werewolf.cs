@@ -25,7 +25,7 @@ public class Werewolf : IRole
          *   night (e.g. when the lucky bastard is attacked).
          * For ordering the actions, I already wrote something in Program.cs with "before" and "after" dependencies.
          */
-        actions.Add(new WerewolfNightAction(Player, this));
+        // actions.Add(new WerewolfNightAction(Player, this));
 
         return true;
     }

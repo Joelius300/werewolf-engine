@@ -1,6 +1,6 @@
 namespace WerewolfEngine;
 
-public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingAction<TInputRequest, TInputSubmission>, IPendingAction<IInputRequest, IInputSubmission>,
+public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingAction<TInputRequest, TInputSubmission>, // IPendingAction<IInputRequest, IInputSubmission>,
     IReadyAction
     where TInputRequest : IInputRequest
     where TInputSubmission : class, IInputSubmission
@@ -28,8 +28,10 @@ public abstract class BaseAction<TInputRequest, TInputSubmission> : IPendingActi
 
     public abstract TInputRequest GetInputRequest();
     
+    /*
     IInputRequest IPendingAction<IInputRequest, IInputSubmission>.GetInputRequest() => GetInputRequest();
     IReadyAction IPendingAction<IInputRequest, IInputSubmission>.MakeReady(IInputSubmission input) => MakeReady((input as TInputSubmission)!);
+    */
 
     public virtual IReadyAction MakeReady(TInputSubmission input)
     {

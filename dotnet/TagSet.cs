@@ -26,11 +26,12 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public TagSet Remove(Tag value) => new(_set.Remove(value));
     public TagSet Union(IEnumerable<Tag> other) => new(_set.Union(other));
 
-    // just the identifier has to match, then they are considered equal
+    // just the identifier has to match, then they are considered equal, so it first removes the old tag then adds the new one
     // TODO not tested yet
     public TagSet Replace(Tag updatedTag) => Remove(updatedTag).Add(updatedTag);
+    public TagSet ReplaceIfExists(Tag updatedTag) => TryGetValue(updatedTag, out _) ? Replace(updatedTag) : this;
 
-    // public TagSet Clone() => new(_set.ToImmutableHashSet());
+    public TagSet Clone() => new(_set.ToImmutableHashSet());
 
     public IEnumerator<Tag> GetEnumerator() => _set.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _set).GetEnumerator();
@@ -44,4 +45,6 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public bool Overlaps(IEnumerable<Tag> other) => _set.Overlaps(other);
     public bool SetEquals(IEnumerable<Tag> other) => _set.SetEquals(other);
     */
+
+    public override string ToString() => "{" + string.Join(", ", _set) + "}";
 }
