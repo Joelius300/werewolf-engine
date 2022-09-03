@@ -22,11 +22,9 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public TagSet Union(IEnumerable<Tag> other) => new(_set.Union(other));
 
     // just the identifier has to match, then they are considered equal, so it first removes the old tag then adds the new one
-    // TODO not tested yet
-    public TagSet Replace(Tag updatedTag) => Remove(updatedTag).Add(updatedTag);
-    public TagSet ReplaceIfExists(Tag updatedTag) => TryGetValue(updatedTag, out _) ? Replace(updatedTag) : this;
-
-    public TagSet Clone() => new(_set.ToImmutableHashSet());
+    public TagSet AddOrReplace(Tag updatedTag) => Remove(updatedTag).Add(updatedTag);
+    // may return the same instance if the tag doesn't exist!
+    public TagSet ReplaceIfExists(Tag updatedTag) => TryGetValue(updatedTag, out _) ? AddOrReplace(updatedTag) : this;
 
     public IEnumerator<Tag> GetEnumerator() => _set.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _set).GetEnumerator();

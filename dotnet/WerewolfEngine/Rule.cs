@@ -13,13 +13,7 @@ public record Rule(TagSet From, TagSet To, bool Explicit)
         if (!Matches(playerTags))
             throw new InvalidOperationException("Cannot collapse tags when rule doesn't match.");
 
-        var to = To.Clone();
-        foreach (var playerTag in playerTags)
-        {
-            // replaces the template tag with the already present tag if there is one to copy the meta-data
-            to = to.ReplaceIfExists(playerTag);
-        }
-
-        return to;
+        // for each player tag it checks if To has such a Tag template and if yes, it replaces it (retain meta-data).
+        return playerTags.Aggregate(To, (current, playerTag) => current.ReplaceIfExists(playerTag));
     }
 }
