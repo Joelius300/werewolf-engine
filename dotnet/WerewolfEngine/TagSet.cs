@@ -9,14 +9,9 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     
     public int Count => _set.Count;
 
-    public TagSet(IImmutableSet<Tag> set) => _set = set;
-    public TagSet(IEnumerable<Tag> tags) : this(tags.ToImmutableHashSet()) {}
     public TagSet(params Tag[] tags) : this((IEnumerable<Tag>)tags) {}
-
-    public bool IsSubsetOf(TagSet tagSet) => _set.IsSubsetOf(tagSet._set);
-    public bool IsSupersetOf(TagSet tagSet) => _set.IsSupersetOf(tagSet._set);
-    public bool Equals(TagSet? tagSet) => tagSet is not null && _set.SetEquals(tagSet._set);
-    public bool Contains(Tag value) => _set.Contains(value);
+    private TagSet(IImmutableSet<Tag> set) => _set = set;
+    private TagSet(IEnumerable<Tag> tags) : this(tags.ToImmutableHashSet()) {}
 
     public bool TryGetValue(Tag equalValue, out Tag actualValue) => _set.TryGetValue(equalValue, out actualValue);
     
@@ -47,4 +42,20 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     */
 
     public override string ToString() => "{" + string.Join(", ", _set) + "}";
+
+    public bool IsSubsetOf(TagSet tagSet) => _set.IsSubsetOf(tagSet._set);
+    public bool IsSupersetOf(TagSet tagSet) => _set.IsSupersetOf(tagSet._set);
+    public bool Contains(Tag value) => _set.Contains(value);
+    public bool Equals(TagSet? tagSet) => tagSet is not null && _set.SetEquals(tagSet._set);
+    
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        return obj.GetType() == GetType() && Equals((TagSet) obj);
+    }
+
+    public override int GetHashCode() => _set.GetHashCode();
+    public static bool operator ==(TagSet? left, TagSet? right) => Equals(left, right);
+    public static bool operator !=(TagSet? left, TagSet? right) => !Equals(left, right);
 }
