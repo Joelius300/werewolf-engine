@@ -20,6 +20,7 @@ public class Rule : IEquatable<Rule>
         Explicit = @explicit;
     }
 
+    // TODO I'm very tired and going to sleep now but shouldn't this be subset and not superset?
     public bool Matches(TagSet playerTags) => Explicit ? From.Equals(playerTags) : From.IsSupersetOf(playerTags);
 
     public TagSet Collapse(TagSet playerTags)
@@ -28,6 +29,8 @@ public class Rule : IEquatable<Rule>
             throw new InvalidOperationException("Cannot collapse tags when rule doesn't match.");
 
         // for each player tag it checks if To has such a Tag template and if yes, it replaces it (retain meta-data).
+        // everytime it does that, a new TagSet is created which is passed along for the next iteration and the final
+        // one is returned from the Collapse function. If there's nothing to replace, no new instances are created.
         return playerTags.Aggregate(To, (current, playerTag) => current.ReplaceIfExists(playerTag));
     }
 
