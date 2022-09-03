@@ -13,6 +13,20 @@ public class TagSetTests
     }
 
     [Fact]
+    public void SetWithDuplicateTags_DuplicatesAreIgnored()
+    {
+        // Arrange
+        Tag a = new("A");
+        
+        // Act
+        TagSet set = new TagSet(a, a);
+        
+        // Assert
+        Assert.Equal(1, set.Count);
+        Assert.Same(a, set.Single());
+    }
+
+    [Fact]
     public void Equals_WithSameTags()
     {
         // Arrange

@@ -1,8 +1,26 @@
 namespace WerewolfEngine;
 
-public record Tag(string Identifier)
+public class Tag : IEquatable<Tag>
 {
-    // public IReadyAction? CausingAction { get; }
+    public string Identifier { get; }
+    // public IReadyAction? CausingAction { get; init; }
+    
+    public Tag(string identifier)
+    {
+        Identifier = identifier;
+    }
 
     public override string ToString() => $"'{Identifier}'";
+
+    public bool Equals(Tag? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Identifier == other.Identifier;
+    }
+
+    public override bool Equals(object? obj) => obj is Tag tag && Equals(tag);
+    public override int GetHashCode() => Identifier.GetHashCode();
+    public static bool operator ==(Tag? left, Tag? right) => Equals(left, right);
+    public static bool operator !=(Tag? left, Tag? right) => !Equals(left, right);
 }
