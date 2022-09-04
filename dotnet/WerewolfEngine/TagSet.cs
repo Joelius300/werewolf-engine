@@ -16,9 +16,12 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public bool TryGetValue(Tag equalValue, out Tag actualValue) => _set.TryGetValue(equalValue, out actualValue);
     
     public TagSet Add(Tag value) => new(_set.Add(value));
+    /// Removes the elements in the specified collection from the current immutable TagSet.
     public TagSet Except(IEnumerable<Tag> other) => new(_set.Except(other));
+    /// Creates an immutable set that contains only elements that exist in this set and the specified set.
     public TagSet Intersect(IEnumerable<Tag> other) => new(_set.Intersect(other));
     public TagSet Remove(Tag value) => new(_set.Remove(value));
+    /// Creates a new immutable TagSet that contains all elements that are present in either the current set or in the specified collection.
     public TagSet Union(IEnumerable<Tag> other) => new(_set.Union(other));
 
     // just the identifier has to match, then they are considered equal, so it first removes the old tag then adds the new one
