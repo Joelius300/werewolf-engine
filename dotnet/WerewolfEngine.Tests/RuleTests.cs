@@ -129,4 +129,129 @@ public class RuleTests
         yield return new object[] {new TagSet(a, b, c), new TagSet(b, c)};
         yield return new object[] {new TagSet(a, b, c, d), new TagSet(b, c, d)};
     }
+
+    [Theory]
+    [MemberData(nameof(BothExplicitDataCollidesWith))]
+    public void CollidesWith(Rule a, Rule b, bool collides, TagSet? offendingTagSet = null)
+    {
+        // test the implementation
+        Assert.Equal(collides, a.CollidesWith(b));
+        
+        // test the test
+        if (offendingTagSet is not null)
+        {
+            Assert.True(a.Matches(offendingTagSet));
+            Assert.True(b.Matches(offendingTagSet));
+        }
+        else
+        {
+            // brute force that there are actually no combinations that match both
+            var tagsUsedInTests = new TagSet(new Tag("A"), new Tag("B"));
+            foreach (TagSet tagSet in tagsUsedInTests.GetCombinations())
+            {
+                Assert.False(a.Matches(tagSet) && b.Matches(tagSet));
+            }
+        }
+    }
+
+    private static IEnumerable<object[]> BothExplicitDataCollidesWith()
+    {
+        Tag a = new("A");
+        Tag b = new("B");
+        // only use a and b, this allows the test to brute force all possible combinations for matches and test the test
+        
+        // same from, both explicit -> collision (only possible way of collision when both are explicit)
+        yield return new object[]
+        {
+            new Rule(new(a), new(), true),
+            new Rule(new(a), new(), true),
+            true,
+            new TagSet(a)
+        };
+        
+        // different from, both explicit -> no collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), true),
+            new Rule(new(b), new(), true),
+            false
+        };
+        
+        // a subset of b, both explicit -> no collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), true),
+            new Rule(new(a, b), new(), true),
+            false
+        };
+        
+        // b subset of a, both explicit -> no collision
+        yield return new object[]
+        {
+            new Rule(new(a, b), new(), true),
+            new Rule(new(a), new(), true),
+            false
+        };
+        
+        // same from, only a explicit -> collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), true),
+            new Rule(new(a), new(), false),
+            true,
+            new TagSet(a)
+        };
+        
+        // a subset of b, only a explicit -> no collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), true),
+            new Rule(new(a, b), new(), false),
+            false
+        };
+        
+        // b subset of a, only a explicit -> collision
+        yield return new object[]
+        {
+            new Rule(new(a, b), new(), true),
+            new Rule(new(a), new(), false),
+            true,
+            new TagSet(a, b)
+        };
+        
+        // same from, only b explicit -> collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), false),
+            new Rule(new(a), new(), true),
+            true,
+            new TagSet(a)
+        };
+        
+        // a subset of b, only b explicit -> collision
+        yield return new object[]
+        {
+            new Rule(new(a), new(), false),
+            new Rule(new(a, b), new(), true),
+            true,
+            new TagSet(a, b)
+        };
+        
+        // b subset of a, only b explicit -> no collision
+        yield return new object[]
+        {
+            new Rule(new(a, b), new(), false),
+            new Rule(new(a), new(), true),
+            false
+        };
+        
+        // both non-explicit -> could always collide
+        yield return new object[]
+        {
+            new Rule(new(a), new(), false),
+            new Rule(new(b), new(), false),
+            true,
+            new TagSet(a, b)
+        };
+    }
 }

@@ -3,6 +3,9 @@ using System.Collections.Immutable;
 
 namespace WerewolfEngine;
 
+/// <summary>
+/// A set of tags for example for a single player. Duplicates are not allowed.
+/// </summary>
 public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>, IEnumerable<Tag>
 {
     private readonly IImmutableSet<Tag> _set;
@@ -32,6 +35,11 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public IEnumerator<Tag> GetEnumerator() => _set.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _set).GetEnumerator();
 
+    /// Constructs all possible combinations of the tags included in this set
+    // https://stackoverflow.com/a/57058345/10883465
+    public IEnumerable<TagSet> GetCombinations(bool includeEmptyTagSet = true) => Enumerable
+        .Range(includeEmptyTagSet ? 0 : 1, 1 << Count)
+        .Select(index => new TagSet(this.Where((v, i) => (index & (1 << i)) != 0)));
     /*
     public bool Contains(Tag item) => _set.Contains(item);
     public bool IsProperSubsetOf(IEnumerable<Tag> other) => _set.IsProperSubsetOf(other);
