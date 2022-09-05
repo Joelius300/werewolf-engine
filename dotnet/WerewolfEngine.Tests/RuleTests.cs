@@ -81,7 +81,7 @@ public class RuleTests
         // Arrange
         Tag a = new("A");
         Tag b = new("B");
-        Rule rule = new(new TagSet(a, b), new TagSet(), true);
+        Rule rule = new(new TagSet(a, b), new TagSet(b), true);
         
         // Act
         TagSet newTags = rule.Collapse(before);
@@ -95,9 +95,9 @@ public class RuleTests
         Tag a = new("A");
         Tag b = new("B");
 
-        // For rule: [{'A', 'B'} -> {}]
-        yield return new object[] {new TagSet(a, b), new TagSet()};
-        yield return new object[] {new TagSet(b, a), new TagSet()};
+        // For rule: [{'A', 'B'} -> {'B'}]
+        yield return new object[] {new TagSet(a, b), new TagSet(b)};
+        yield return new object[] {new TagSet(b, a), new TagSet(b)};
     }
     
     [Theory]
@@ -107,7 +107,7 @@ public class RuleTests
         // Arrange
         Tag a = new("A");
         Tag b = new("B");
-        Rule rule = new(new TagSet(a, b), new TagSet(), false);
+        Rule rule = new(new TagSet(a, b), new TagSet(b), false);
         
         // Act
         TagSet newTags = rule.Collapse(before);
@@ -123,10 +123,10 @@ public class RuleTests
         Tag c = new("C");
         Tag d = new("D");
 
-        // For rule: ({'A', 'B'} -> {})
-        yield return new object[] {new TagSet(a, b), new TagSet()};
-        yield return new object[] {new TagSet(b, a), new TagSet()};
-        yield return new object[] {new TagSet(a, b, c), new TagSet(c)};
-        yield return new object[] {new TagSet(a, b, c, d), new TagSet(c, d)};
+        // For rule: ({'A', 'B'} -> {'B'})
+        yield return new object[] {new TagSet(a, b), new TagSet(b)};
+        yield return new object[] {new TagSet(b, a), new TagSet(b)};
+        yield return new object[] {new TagSet(a, b, c), new TagSet(b, c)};
+        yield return new object[] {new TagSet(a, b, c, d), new TagSet(b, c, d)};
     }
 }
