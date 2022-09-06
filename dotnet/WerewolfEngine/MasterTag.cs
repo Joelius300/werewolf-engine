@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace WerewolfEngine;
 
 public class MasterTag : Tag

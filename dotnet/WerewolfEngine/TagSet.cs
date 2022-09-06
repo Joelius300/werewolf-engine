@@ -39,7 +39,7 @@ public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlyS
     // https://stackoverflow.com/a/57058345/10883465
     public IEnumerable<TagSet> GetCombinations(bool includeEmptyTagSet = true) => Enumerable
         .Range(includeEmptyTagSet ? 0 : 1, 1 << Count)
-        .Select(index => new TagSet(this.Where((v, i) => (index & (1 << i)) != 0)));
+        .Select(index => new TagSet(this.Where((_, i) => (index & (1 << i)) != 0)));
     /*
     public bool Contains(Tag item) => _set.Contains(item);
     public bool IsProperSubsetOf(IEnumerable<Tag> other) => _set.IsProperSubsetOf(other);

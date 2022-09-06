@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace WerewolfEngine.Tests;
 
 public class RuleSetTests
