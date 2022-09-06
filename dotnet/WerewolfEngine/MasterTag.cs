@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace WerewolfEngine;
 
 public class MasterTag : Tag
@@ -10,5 +12,10 @@ public class MasterTag : Tag
     // in love as well as turning into a werewolf.
     internal MasterTag(string identifier) : base(identifier)
     {
+    }
+
+    public static IEnumerable<MasterTag> AllMasterTags()
+    {
+        yield return Killed;
     }
 }

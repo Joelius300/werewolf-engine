@@ -3,10 +3,10 @@ namespace WerewolfEngine;
 /// <summary>
 /// A definition of a transformation (reduction) from one set of tags to another.
 /// </summary>
-public class Rule : IEquatable<Rule>
+public sealed class Rule : IEquatable<Rule>
 {
-    protected TagSet From { get; }
-    protected TagSet To { get; }
+    public TagSet From { get; }
+    public TagSet To { get; }
     public bool Explicit { get; }
     
     public int FromSize => From.Count;
@@ -23,11 +23,13 @@ public class Rule : IEquatable<Rule>
         if (to == from)
             throw new ArgumentException("Cannot collapse tag set to itself - change must be guaranteed.", nameof(to));
 
+        /*
         // I may need to revisit this because right now I can imagine situations where you are killed _and_ get a new role
         // (for certain game modes this might be relevant).
         if (to.Any(t => t is MasterTag) && to.Count != 1)
             throw new ArgumentException(
                 "A rule can only collapse to one single master tag (or any number of ordinary tags).", nameof(to));
+        */
         
         From = from;
         To = to;

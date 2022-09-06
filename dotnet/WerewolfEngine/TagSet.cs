@@ -6,15 +6,15 @@ namespace WerewolfEngine;
 /// <summary>
 /// A set of tags for example for a single player. Duplicates are not allowed.
 /// </summary>
-public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>, IEnumerable<Tag>
+public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>, IEnumerable<Tag>
 {
     private readonly IImmutableSet<Tag> _set;
     
     public int Count => _set.Count;
 
     public TagSet(params Tag[] tags) : this((IEnumerable<Tag>)tags) {}
+    public TagSet(IEnumerable<Tag> tags) : this(tags.ToImmutableHashSet()) {}
     private TagSet(IImmutableSet<Tag> set) => _set = set;
-    private TagSet(IEnumerable<Tag> tags) : this(tags.ToImmutableHashSet()) {}
 
     public bool TryGetValue(Tag equalValue, out Tag actualValue) => _set.TryGetValue(equalValue, out actualValue);
     
@@ -49,6 +49,9 @@ public class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>
     public bool Overlaps(IEnumerable<Tag> other) => _set.Overlaps(other);
     public bool SetEquals(IEnumerable<Tag> other) => _set.SetEquals(other);
     */
+
+    /// Returns true if the core engine can handle all the tags in this tag set.
+    public bool IsFullyCollapsed() => this.All(t => t is MasterTag);
 
     public override string ToString() => "{" + string.Join(", ", _set) + "}";
 

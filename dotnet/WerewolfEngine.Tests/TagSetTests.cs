@@ -129,4 +129,34 @@ public class TagSetTests
         Assert.NotSame(b, newSet.Single());
         Assert.Same(set, newSet); // actually only this or the other three necessary..
     }
+
+    [Fact]
+    public void IsFullyCollapsed_Empty()
+    {
+        // Arrange
+        TagSet set = new();
+        
+        // Act & Assert
+        Assert.True(set.IsFullyCollapsed());
+    }
+    
+    [Fact]
+    public void IsFullyCollapsed_OnlyMasterTags()
+    {
+        // Arrange
+        TagSet set = new(MasterTag.Killed);
+        
+        // Act & Assert
+        Assert.True(set.IsFullyCollapsed());
+    }
+    
+    [Fact]
+    public void IsFullyCollapsed_MixedTags()
+    {
+        // Arrange
+        TagSet set = new(MasterTag.Killed, new Tag("A"));
+        
+        // Act & Assert
+        Assert.False(set.IsFullyCollapsed());
+    }
 }
