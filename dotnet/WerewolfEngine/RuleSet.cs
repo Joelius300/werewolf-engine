@@ -1,11 +1,37 @@
-using System.Collections;
-
 namespace WerewolfEngine;
 
 /// <summary>
 /// A set of rules defining how any tag set can be iteratively reduced to a set of master tags the
 /// core engine can handle.
 /// </summary>
+/* Maximum number of rules for n different tags is as follows:
+ * (2^(n+1) + (n-1)(n+4)) / 2
+ *
+ * which is just the sum of the number of explicit rules and the number of non-explicit rules.
+ * This function grows similarly to 2^n and for 10 unique tags, we already have over 1000 possible rules we could write.
+ * I think that should easily be enough to correctly model the game of werewolf with my rules even though it might
+ * require some helper methods to create wild-card like rules or something like that but we'll cross that bridge when we
+ * get to it.
+ *
+ * Number of explicit rules:
+ * 2^n - 1
+ *
+ * Reasoning:
+ * It's the sum of all permutations of all the possible From sizes. This is almost the size of the power set
+ * (all subsets including itself and the empty set) with the only difference that we don't want the empty set
+ * because you cannot have a 0 From size. So we just take one from the definition of the number of elements in the power
+ * set (SUM k from 0 to n of (n choose k) = 2^n) and get 2^n - 1
+ * 
+ *
+ * Number of non-explicit rules:
+ * n(n+1)/2 + (n-1)
+ *
+ * Reasoning: For each size of From (n down to 1) you can have one size for To (From size down to 0 = From size + 1)
+ * which results in the series: (n+1) + n + (n-1) + (n-2) + ... + 2
+ * now we just need to take into account that there cannot be a rule that transforms a tagset of size n to another of size
+ * n because that would have to be the same tagset which is forbidden so the whole series becomes:
+ * n + n + (n-1) + (n-2) + ... + 2 = n + n(n+1)/2 - 1
+ */
 public sealed class RuleSet
 {
     private readonly IDictionary<int, ICollection<Rule>> _explicitRules;
