@@ -1,7 +1,7 @@
 namespace WerewolfEngine;
 
 /// <summary>
-/// A single tag a player can be tagged with. Defined by the roles that distribute them.
+/// A single, immutable tag a player can be tagged with. Defined by the roles that distribute them.
 /// Cannot define parameters and is for all intents and purposes a string (with meta-data).
 /// Equality is only based on the id (string) of the tag.
 /// </summary>
@@ -29,4 +29,5 @@ public class Tag : IEquatable<Tag>
     public static bool operator ==(Tag? left, Tag? right) => Equals(left, right);
     public static bool operator !=(Tag? left, Tag? right) => !Equals(left, right);
     public static explicit operator string(Tag tag) => tag.Identifier;
+    public static implicit operator Tag(string identifier) => new(identifier); // very useful for defining rules and doesn't lose information
 }

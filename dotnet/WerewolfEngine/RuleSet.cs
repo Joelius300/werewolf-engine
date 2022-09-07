@@ -2,7 +2,7 @@ namespace WerewolfEngine;
 
 /// <summary>
 /// A set of rules defining how any tag set can be iteratively reduced to a set of master tags the
-/// core engine can handle.
+/// core engine can handle. Immutable for now.
 /// </summary>
 /* Maximum number of rules for n different tags is as follows:
  * (2^(n+1) + (n-1)(n+4)) / 2

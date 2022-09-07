@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 namespace WerewolfEngine;
 
 /// <summary>
-/// A set of tags for example for a single player. Duplicates are not allowed.
+/// An immutable set of tags for example for a single player. Duplicates are not allowed.
 /// </summary>
 public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>, IEnumerable<Tag>
 {

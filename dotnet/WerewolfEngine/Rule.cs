@@ -1,7 +1,7 @@
 namespace WerewolfEngine;
 
 /// <summary>
-/// A definition of a transformation (reduction) from one set of tags to another.
+/// An immutable definition of a transformation (reduction) from one set of tags to another.
 /// </summary>
 public sealed class Rule : IEquatable<Rule>
 {
