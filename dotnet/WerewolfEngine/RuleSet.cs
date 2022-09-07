@@ -4,6 +4,10 @@ namespace WerewolfEngine;
 /// A set of rules defining how any tag set can be iteratively reduced to a set of master tags the
 /// core engine can handle. Immutable for now.
 /// </summary>
+// It probably makes sense to make this mutable later on with the option of checking if a rule can be added (or if there
+// is a collision and if so with which rule), as well as just adding rules after creation. Especially once utility
+// functions are used to create large numbers of rules to mimic wildcard rules, you'd only want to add those that don't
+// already exist (so checking for that would be another public method and could be used inside the collision check as well).
 /* Maximum number of rules for n different tags is as follows:
  * (2^(n+1) + (n-1)(n+4)) / 2
  *
