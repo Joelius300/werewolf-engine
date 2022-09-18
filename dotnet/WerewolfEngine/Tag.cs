@@ -17,6 +17,8 @@ public class Tag : IEquatable<Tag>
 
     public override string ToString() => $"'{Identifier}'";
 
+    // maybe an EqualsPerfectly or something which also checks the meta-data (helpful, at least for tests)
+    
     public bool Equals(Tag? other)
     {
         if (ReferenceEquals(null, other)) return false;

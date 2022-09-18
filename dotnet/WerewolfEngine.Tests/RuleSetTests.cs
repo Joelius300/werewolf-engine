@@ -8,24 +8,52 @@ public class RuleSetTests
         Assert.Throws<ArgumentException>("rules", () => new RuleSet(Array.Empty<Rule>()));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CannotConstructRulesetWithRulesWithIdenticalFromAndType(bool @explicit)
+    {
+        // Arrange
+        var rules = FromTuples(("ABC", "AB", @explicit), ("ABC", "AC", @explicit));
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
+    }
+
     [Fact]
     public void CannotConstructRulesetWithConflictingExplicitRules()
     {
         // Arrange
-        var rules = FromTuples(("ABC", "AB", true), ("CBA", "", true));
-        
+        var rules = FromTuples(("ABC", "AB", true), ("ABC", "", true));
+
         // Act & Assert
         Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
     }
-    
+
     [Fact]
-    public void CannotConstructRulesetWithConflictingNonExplicitRules()
+    public void CanConstructRulesetWithNonExplicitRulesOfDifferentPriorities()
     {
         // Arrange
-        var rules = FromTuples(("ABC", "AB", false), ("DEF", "CE", false)); // same priority
-        
-        // Act & Assert
-        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
+        var rules = FromTuples(("AB", "B", false), ("AC", "AB", false));
+
+        // Act
+        var ruleSet = new RuleSet(rules);
+
+        // Assert
+        Assert.NotNull(ruleSet);
+    }
+
+    [Fact]
+    public void CanConstructRulesetWithNonExplicitRulesOfSamePriorities()
+    {
+        // Arrange
+        var rules = FromTuples(("AB", "B", false), ("AC", "C", false));
+
+        // Act
+        var ruleSet = new RuleSet(rules);
+
+        // Assert
+        Assert.NotNull(ruleSet);
     }
 
     [Fact]
@@ -33,7 +61,7 @@ public class RuleSetTests
     {
         // Arrange
         var rules = FromTuples(("ABC", "AB", true), ("CBA", "D", true));
-        
+
         // Act & Assert
         Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
     }
@@ -48,13 +76,13 @@ public class RuleSetTests
 
         // Act
         var collapsed = ruleSet.Collapse(playerTags);
-        
+
         // Assert
         // used explicit rule instead of non-explicit even though both match
         Assert.True(rules.All(r => r.Matches(playerTags)));
         Assert.Equal(new TagSet(), collapsed);
     }
-    
+
     [Fact]
     public void Collapse_MatchesMultipleOfEachTypeBeforeBeingFullyCollapsed()
     {
@@ -70,11 +98,115 @@ public class RuleSetTests
 
         // Act
         var collapsed = ruleSet.Collapse(playerTags);
-        
+
         // Assert
         Assert.Equal(new TagSet(), collapsed);
     }
-    
+
+    [Fact]
+    public void Collapse_MatchesNonExplicitRuleWithHighestPriority()
+    {
+        // Arrange
+        RuleSet ruleSet = new(FromTuples(
+                ("ABCD", "", false), // highest reduction/priority, so it should match this one
+                ("ABC", "", false),
+                ("AB", "", false),
+                ("A", "", false),
+                ("E", "", true)
+            )
+        );
+        // the only way to collapse this is ABCDE -> E -> '', all the other rules would lead nowhere so if it doesn't
+        // throw it was successful and chose the correct rule to apply.
+        var playerTags = CharsAsTags("ABCDE");
+
+        // Act
+        var collapsed = ruleSet.Collapse(playerTags);
+
+        // Assert
+        Assert.Equal(new TagSet(), collapsed);
+    }
+
+    [Fact] // TODO for all collision tests, add one that checks if the meta-data has been merged
+    public void Collapse_CanHandleRuleCollisionWhenBothRulesResultInTheSameNextStep()
+    {
+        // Arrange
+        RuleSet ruleSet = new(FromTuples(
+                // first two have the same priority and just remove A (when AB or AC is contained in the set)
+                ("AB", "B", false),
+                ("AC", "C", false),
+                ("BC", "", true) // fully collapse BC
+            )
+        );
+        var playerTags = CharsAsTags("ABC");
+        /* This can collapse either through
+         * ABC -> BC -> ''
+         * or
+         * ABC -> BC -> ''
+         *
+         * In both cases, the intermediate step is BC so the ruleset can recover from the collision.
+         */
+
+        // Act
+        var collapsed = ruleSet.Collapse(playerTags);
+
+        // Assert
+        Assert.Equal(new TagSet(), collapsed);
+    }
+
+    [Fact] // TODO for all collision tests, add one that checks if the meta-data has been merged
+    public void Collapse_CanHandleRuleCollisionWhenBothRulesResultInTheSameFullyCollapsedSet()
+    {
+        // Arrange
+        RuleSet ruleSet = new(FromTuples(
+                ("ABC", "AC", false), // ABCD -> ACD
+                ("ACD", "AD", true),
+                ("AD", "", true),
+                ("ACD", "CD", false), // ABCD -> BCD
+                ("BCD", "", true)
+            )
+        );
+        var playerTags = CharsAsTags("ABCD");
+        /* This can collapse either through
+         * ABCD -> ACD -> AD -> ''
+         * or
+         * ABCD -> BCD -> ''
+         *
+         * In both cases, the fully collapsed set is '' so the ruleset can recover from the collision.
+         */
+
+        // Act
+        var collapsed = ruleSet.Collapse(playerTags);
+
+        // Assert
+        Assert.Equal(new TagSet(), collapsed);
+    }
+
+    [Fact]
+    public void Collapse_ThrowsOnRuleCollisionWhenFullyCollapsedSetIsDifferent()
+    {
+        // Arrange
+        var rules = FromTuples(
+                ("ABC", "AC", false), // ABCD -> ACD
+                ("ACD", "AD", true),
+                ("ACD", "CD", false), // ABCD -> BCD
+                ("BCD", "", true)
+            )
+            .ToList();
+        rules.Add(new Rule(CharsAsTags("AD"), new(MasterTag.Killed), true));
+        var ruleSet = new RuleSet(rules);
+        var playerTags = CharsAsTags("ABCD");
+        /* This can collapse either through
+         * ABCD -> ACD -> AD -> killed
+         * or
+         * ABCD -> BCD -> ''
+         *
+         * Since they end in different tag sets, it cannot recover and throws and exception.
+         */
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => ruleSet.Collapse(playerTags));
+    }
+
     [Fact]
     public void Collapse_ReturnsImmediatelyIfAlreadyFullyCollapsed()
     {
@@ -84,12 +216,12 @@ public class RuleSetTests
 
         // Act
         var collapsed = ruleSet.Collapse(playerTags);
-        
+
         // Assert
         Assert.Equal(playerTags, collapsed);
         Assert.Same(playerTags, collapsed); // might be testing for implementation details here
     }
-    
+
     [Fact]
     public void Collapse_ThrowsIfTagDoesntExistInAnyRule()
     {
@@ -100,7 +232,7 @@ public class RuleSetTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => ruleSet.Collapse(playerTags));
     }
-    
+
     [Fact]
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundImmediately()
     {
@@ -111,7 +243,7 @@ public class RuleSetTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => ruleSet.Collapse(playerTags));
     }
-    
+
     [Fact]
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundAfterMatchingExplicitRule()
     {
@@ -122,7 +254,7 @@ public class RuleSetTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => ruleSet.Collapse(playerTags));
     }
-    
+
     [Fact]
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundAfterMatchingNonExplicitRule()
     {
