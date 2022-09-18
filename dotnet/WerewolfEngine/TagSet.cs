@@ -8,13 +8,16 @@ namespace WerewolfEngine;
 /// </summary>
 public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlySet<Tag>, IEnumerable<Tag>
 {
-    private readonly IImmutableSet<Tag> _set;
-    
+    private readonly ImmutableHashSet<Tag> _set;
+
+    private static readonly IEqualityComparer<ImmutableHashSet<Tag>> SetEqualityComparer =
+        new ImmutableHashSetEqualityComparer<Tag>();
+
     public int Count => _set.Count;
 
     public TagSet(params Tag[] tags) : this((IEnumerable<Tag>)tags) {}
     public TagSet(IEnumerable<Tag> tags) : this(tags.ToImmutableHashSet()) {}
-    private TagSet(IImmutableSet<Tag> set) => _set = set;
+    private TagSet(ImmutableHashSet<Tag> set) => _set = set;
 
     public bool TryGetValue(Tag equalValue, out Tag actualValue) => _set.TryGetValue(equalValue, out actualValue);
     
@@ -58,7 +61,7 @@ public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlyS
     public bool IsSubsetOf(TagSet tagSet) => _set.IsSubsetOf(tagSet._set);
     public bool IsSupersetOf(TagSet tagSet) => _set.IsSupersetOf(tagSet._set);
     public bool Contains(Tag value) => _set.Contains(value);
-    public bool Equals(TagSet? tagSet) => tagSet is not null && _set.SetEquals(tagSet._set);
+    public bool Equals(TagSet? tagSet) => tagSet is not null && SetEqualityComparer.Equals(_set, tagSet._set);
     
     public override bool Equals(object? obj)
     {
@@ -67,7 +70,7 @@ public sealed class TagSet : IEquatable<TagSet>, IEnumerable<Tag> //, IReadOnlyS
         return obj.GetType() == GetType() && Equals((TagSet) obj);
     }
 
-    public override int GetHashCode() => _set.GetHashCode();
+    public override int GetHashCode() => SetEqualityComparer.GetHashCode(_set);
     public static bool operator ==(TagSet? left, TagSet? right) => Equals(left, right);
     public static bool operator !=(TagSet? left, TagSet? right) => !Equals(left, right);
 }
