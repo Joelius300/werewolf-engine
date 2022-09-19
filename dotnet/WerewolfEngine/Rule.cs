@@ -3,6 +3,13 @@ namespace WerewolfEngine;
 /// <summary>
 /// An immutable definition of a transformation (reduction) from one set of tags to another.
 /// </summary>
+// Maybe will need to be non-sealed in the future for implementing more special Rules with maps for meta-data, e.g.
+// killed -> killed_by_werewolf, killed_by_witch would mean that To has to contain killed, From the other to and during
+// collapse, the meta-data of killed_by_werewolf and killed_by_witch would be merged into killed. This would be a more
+// explicit system as the CombineMetaData flag but for the same purpose more or less. However, this system here would
+// allow the building of trees and connecting of converging branches by aggregating the rules together which also needs
+// to deal with the meta-data in a sensible matter. That way, you could reduce many rules of multiple steps (with
+// potentially many non-explicit rules) into a single explicit rule that knows exactly how to deal with the meta-data.
 public sealed class Rule : IEquatable<Rule>
 {
     public TagSet From { get; }
