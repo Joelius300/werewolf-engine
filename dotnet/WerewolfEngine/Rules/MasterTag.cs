@@ -1,4 +1,4 @@
-namespace WerewolfEngine;
+namespace WerewolfEngine.Rules;
 
 public class MasterTag : Tag
 {

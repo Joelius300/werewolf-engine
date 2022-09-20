@@ -1,4 +1,4 @@
-namespace WerewolfEngine;
+namespace WerewolfEngine.Rules;
 
 /// <summary>
 /// An immutable definition of a transformation (reduction) from one set of tags to another.

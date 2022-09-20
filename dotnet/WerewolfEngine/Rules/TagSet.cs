@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Immutable;
 
-namespace WerewolfEngine;
+namespace WerewolfEngine.Rules;
 
 /// <summary>
 /// An immutable set of tags for example for a single player. Duplicates are not allowed.

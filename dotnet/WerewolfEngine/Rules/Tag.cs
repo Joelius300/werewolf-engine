@@ -1,4 +1,4 @@
-namespace WerewolfEngine;
+namespace WerewolfEngine.Rules;
 
 /// <summary>
 /// A single, immutable tag a player can be tagged with. Defined by the roles that distribute them.

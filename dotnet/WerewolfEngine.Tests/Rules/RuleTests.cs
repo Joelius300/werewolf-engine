@@ -1,4 +1,6 @@
-namespace WerewolfEngine.Tests;
+using WerewolfEngine.Rules;
+
+namespace WerewolfEngine.Tests.Rules;
 
 public class RuleTests
 {

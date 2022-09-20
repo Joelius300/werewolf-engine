@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace WerewolfEngine;
+namespace WerewolfEngine.Rules;
 
 /// <summary>
 /// A set of rules defining how any tag set can be reduced to a set of master tags the

@@ -1,26 +1,31 @@
-﻿using WerewolfEngine;
+﻿using WerewolfEngine.Rules;
 
-List<Rule> rules = new();
+Rules();
 
-// Werewolf
-const string KilledByWerewolf = "killed_by_werewolf";
-rules.Add(new Rule(new TagSet(KilledByWerewolf), new TagSet(MasterTag.Killed), true));
 
-// Witch
-const string HealedByWitch = "healed_by_witch";
-const string KilledByWitch = "killed_by_witch";
-rules.Add(new Rule(new TagSet(HealedByWitch), new TagSet(), true));
-rules.Add(new Rule(new TagSet(KilledByWitch), new TagSet(MasterTag.Killed), true));
-rules.Add(new Rule(new TagSet(KilledByWerewolf, HealedByWitch), new TagSet(HealedByWitch), false));
-// no Rule for killed_by_werewolf and killed_by_witch since that can't happen in game (well that's up to the GM..)
-// in the same way healed_by_witch and killed_by_witch don't work together either (define either error or resolve)
+void Rules()
+{
+    List<Rule> rules = new();
 
-// Guardian
-const string ProtectedByGuardian = "protected_by_guardian";
-rules.Add(new Rule(new TagSet(ProtectedByGuardian), new TagSet(), true));
-rules.Add(new Rule(new TagSet(KilledByWerewolf, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
-rules.Add(new Rule(new TagSet(KilledByWitch, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
-rules.Add(new Rule(new TagSet(HealedByWitch, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
+    // Werewolf
+    const string KilledByWerewolf = "killed_by_werewolf";
+    rules.Add(new Rule(new TagSet(KilledByWerewolf), new TagSet(MasterTag.Killed), true));
+
+    // Witch
+    const string HealedByWitch = "healed_by_witch";
+    const string KilledByWitch = "killed_by_witch";
+    rules.Add(new Rule(new TagSet(HealedByWitch), new TagSet(), true));
+    rules.Add(new Rule(new TagSet(KilledByWitch), new TagSet(MasterTag.Killed), true));
+    rules.Add(new Rule(new TagSet(KilledByWerewolf, HealedByWitch), new TagSet(HealedByWitch), false));
+    // no Rule for killed_by_werewolf and killed_by_witch since that can't happen in game (well that's up to the GM..)
+    // in the same way healed_by_witch and killed_by_witch don't work together either (define either error or resolve)
+
+    // Guardian
+    const string ProtectedByGuardian = "protected_by_guardian";
+    rules.Add(new Rule(new TagSet(ProtectedByGuardian), new TagSet(), true));
+    rules.Add(new Rule(new TagSet(KilledByWerewolf, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
+    rules.Add(new Rule(new TagSet(KilledByWitch, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
+    rules.Add(new Rule(new TagSet(HealedByWitch, ProtectedByGuardian), new TagSet(ProtectedByGuardian), false));
 
 
 // UPDATE 18.09.22 8deb974
@@ -73,14 +78,15 @@ rules.Add(new Rule(new TagSet(HealedByWitch, ProtectedByGuardian), new TagSet(Pr
 // of all tags in the game, picks out only the non-master-tags who start with "killed", creates all combinations with
 // them, creates an explicit rule for each combination that just leads to "killed" with the CombineMetaData flag set.
 
-RuleSet ruleSet = new(rules);
-TagSet tags = new(KilledByWerewolf);
-Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just killed");
-tags = new(KilledByWitch);
-Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just killed");
-tags = new(KilledByWerewolf, HealedByWitch);
-Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
-tags = new(KilledByWerewolf, ProtectedByGuardian);
-Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
-tags = new(KilledByWerewolf, HealedByWitch, ProtectedByGuardian);
-Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
+    RuleSet ruleSet = new(rules);
+    TagSet tags = new(KilledByWerewolf);
+    Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just killed");
+    tags = new(KilledByWitch);
+    Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just killed");
+    tags = new(KilledByWerewolf, HealedByWitch);
+    Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
+    tags = new(KilledByWerewolf, ProtectedByGuardian);
+    Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
+    tags = new(KilledByWerewolf, HealedByWitch, ProtectedByGuardian);
+    Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
+}
