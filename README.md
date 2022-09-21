@@ -24,4 +24,12 @@ In order to achieve the goals I set myself for the assistant app, I will be tryi
 
 ## License
 
-AGPL for now but I might change that at a later stage.
+AGPL for now but I might change that at a later stage. If I do switch, I'll make sure that you can still
+
+- create your own characters, rules and adjustments
+- create a free api, app, website, tool or anything that uses the library and do whatever with it (publish, keep, ..)
+- create a paid/commercial api, app, website, tool or anything that uses the library and do whatever with it (publish, keep, ..)
+
+and I will also always require you to (at the very least)
+
+- publish the changes you make to the library (weakest copyleft I'll probably consider is MPL, up to AGPL)
