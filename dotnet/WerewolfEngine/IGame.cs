@@ -19,15 +19,7 @@ namespace WerewolfEngine;
 
 public interface IGame
 {
-    IGame Advance(InputResponse inputResponse);
-}
-
-public interface IAction<in TInput, out TInputRequest>
-    where TInput :
-{
-    TInputRequest GetInputRequest();
-    
-    IGame Advance(TInput input);
+    IGame Advance(IInputResponse inputResponse);
 }
 
 /* An action should provide a way to obtain an input request that the UI or API or whatever can use to build the request
@@ -59,29 +51,80 @@ public interface IAction<in TInput, out TInputRequest>
  *   already implement the transformation on the game according to the given inputs and thus you could work with the trait
  *   object because it's just a question of behaviour, not data.
  *
- * I think I'll try to figure out a nice system with an id matching (non-generic) request and a behavior implementing
- * response to avoid downcasting and runtime type checks. We'll see how that goes.
+ * I think I'll try to figure out a nice system with an id matching (non-generic) request (requires downcast but outside
+ * of the engine) and a behavior implementing response to avoid downcasting and runtime type checks. We'll see how that goes.
+ *
+ * However, I don't really like this either.. I believe that the action should be able to decide what happens with the
+ * input of the user. As it stands right now, the developer of the UI, API, whatever, is responsible for instantiating
+ * the response object and by extension needs to know the appropriate type. If in the future there are multiple versions
+ * of the witch but with the same input possibilities, then you would still need to create two new types for request and response.
+ * It would be much nicer to keep the request and response just as data carriers even though that means downcasting is
+ * required. In C# that's no big deal. In Rust it seems like it would work as well even though it's discouraged for good
+ * reason. One possibility I see, even though maybe not for the beginning, is to build the whole game with macros which
+ * would allow the engine to build a strongly typed enum with all the possible request and responses so you could match
+ * them without a downcast (that also has some lifetime limitation that hopefully aren't impactful for my use-case but still).
  */
 
-public enum InputType
+public interface IInputRequest { }
+public interface IInputResponse
 {
-    Player,
-    Choice
+    IGame Transform(IGame game);
 }
 
-// basically a OneOf<PlayerInputResponse, ...>
-public record InputResponse(InputType Type, PlayerInputResponse? Player, ChoiceOfInputResponse? Choice); // in Rust, this would be an enum, no need for Type etc.
-public record PlayerInputResponse(string Name);
-public record ChoiceOfInputResponse(string Choice);
 
 
-// OneOf<PlayerInputRequest, ..>
-public record InputRequest(InputType Type, PlayerInputRequest? Player, ChoiceOfInputRequest? Choice);
+// It's clear by convention that the appropriate result this transforms into is a WitchInputResponse.
+public record WitchInputRequest(int HealSpellCount, int KillSpellCount);
 
-public record BaseInputRequest(string Name, bool Required);
+public record WitchInputResponse(string? HealTargetName, string? KillTargetName) : IInputResponse
+{
+    public IGame Transform(IGame game)
+    {
+        /*
+        if (HealTargetName is not null)
+            game = game.UpdatePlayer(game.GetPlayer().Tag(Witch.HealedByWitch));
+            // or
+            game = game.UpdatePlayer(HealTargetName, p => p.Tag(Witch.HealedByWitch));
+            // or
+            game = game.TagPlayer(HealTargetName, Witch.HealedByWitch);
+        */
 
-// for now you can't chose the same person twice (by convention)
-public record PlayerInputRequest
-    (string Name, bool Required, ICollection<string> PlayerPool, int Number) : BaseInputRequest(Name, Required);
+        // same for kill target
+        return game;
+    }
+}
 
-public record ChoiceOfInputRequest(string Name, bool Required, ICollection<string> Choices, int Number) : BaseInputRequest(Name, Required);
+public interface IAction<out TInputRequest, in TInputResponse>
+    where TInputRequest : IInputRequest
+    where TInputResponse : IInputResponse
+{
+    TInputRequest GetInputRequest();
+    IGame Do(IGame game, TInputResponse input);
+}
+
+public interface IAction
+{
+    IInputRequest GetInputRequest();
+    IGame Do(IGame game, IInputResponse input);
+}
+
+public abstract class Action<TInputRequest, TInputResponse> : IAction<TInputRequest, TInputResponse>, IAction
+    where TInputRequest : IInputRequest
+    where TInputResponse : IInputResponse
+{
+    public abstract TInputRequest GetInputRequest();
+    public virtual IGame Do(IGame game, TInputResponse input) => ((IAction)this).Do(game, input);
+
+    IInputRequest IAction.GetInputRequest() => GetInputRequest();
+    IGame IAction.Do(IGame game, IInputResponse input) => input.Transform(game);
+    
+    /* downcast solution
+    IGame IAction.Do(IInputResponse input)
+    {
+        if (input is TInputResponse response)
+            return Do(response);
+
+        throw new ArgumentException("The input response has an incompatible type.", nameof(input));
+    }
+    */
+}
