@@ -1,3 +1,5 @@
+using WerewolfEngine.Rules;
+
 namespace WerewolfEngine;
 
 /* If I've learned anything about creating an application from the ground up, especially in rust,
@@ -20,6 +22,32 @@ namespace WerewolfEngine;
 public interface IGame
 {
     IGame Advance(IInputResponse inputResponse);
+
+    IPlayer GetPlayer(string name);
+    IGame UpdatePlayer(IPlayer player);
+    IGame UpdatePlayer(string name, Func<IPlayer, IPlayer> updater);
+    IGame TagPlayer(string name, Tag tag);
+}
+
+public interface IPlayer
+{
+    IRole Role { get; }
+
+    T GetRole<T>();
+    IPlayer Tag(Tag tag);
+    IPlayer UpdateRole<T>(Func<T, T> updater);
+}
+
+public interface IRole
+{
+    // something something get action (see L127 in the messy dotnet Program.cs for ideas)
+}
+
+public record WitchRole(int HealSpellCount, int KillSpellCount) : IRole
+{
+    public const string HealedByWitch = "healed_by_witch";
+
+    public WitchRole UpdateHealSpellCount(int relative) => this with {HealSpellCount = HealSpellCount + relative};
 }
 
 /* An action should provide a way to obtain an input request that the UI or API or whatever can use to build the request
@@ -54,7 +82,7 @@ public interface IGame
  * I think I'll try to figure out a nice system with an id matching (non-generic) request (requires downcast but outside
  * of the engine) and a behavior implementing response to avoid downcasting and runtime type checks. We'll see how that goes.
  *
- * However, I don't really like this either.. I believe that the action should be able to decide what happens with the
+ * Update, I don't really like this either.. I believe that the action should be able to decide what happens with the
  * input of the user. As it stands right now, the developer of the UI, API, whatever, is responsible for instantiating
  * the response object and by extension needs to know the appropriate type. If in the future there are multiple versions
  * of the witch but with the same input possibilities, then you would still need to create two new types for request and response.
@@ -66,30 +94,49 @@ public interface IGame
  */
 
 public interface IInputRequest { }
-public interface IInputResponse
-{
-    IGame Transform(IGame game);
-}
+public interface IInputResponse { }
 
 
 
 // It's clear by convention that the appropriate result this transforms into is a WitchInputResponse.
-public record WitchInputRequest(int HealSpellCount, int KillSpellCount);
+public record WitchInputRequest(int HealSpellCount, int KillSpellCount) : IInputRequest;
 
-public record WitchInputResponse(string? HealTargetName, string? KillTargetName) : IInputResponse
+public record WitchInputResponse(string? HealTargetName, string? KillTargetName) : IInputResponse;
+
+public class WitchAction : Action<WitchInputRequest, WitchInputResponse>
 {
-    public IGame Transform(IGame game)
-    {
-        /*
-        if (HealTargetName is not null)
-            game = game.UpdatePlayer(game.GetPlayer().Tag(Witch.HealedByWitch));
-            // or
-            game = game.UpdatePlayer(HealTargetName, p => p.Tag(Witch.HealedByWitch));
-            // or
-            game = game.TagPlayer(HealTargetName, Witch.HealedByWitch);
-        */
+    private new string ActingPlayer => base.ActingPlayer!;
 
-        // same for kill target
+    public WitchAction(string witch) : base(witch)
+    {
+    }
+    
+    public override WitchInputRequest GetInputRequest(IGame game)
+    {
+        var witch = game.GetPlayer(ActingPlayer);
+        var role = witch.GetRole<WitchRole>();
+
+        return new WitchInputRequest(role.HealSpellCount, role.KillSpellCount);
+    }
+
+    public override IGame Do(IGame game, WitchInputResponse input)
+    {
+        if (input.HealTargetName is not null)
+        {
+            game = game.UpdatePlayer(game.GetPlayer(input.HealTargetName).Tag(WitchRole.HealedByWitch));
+            // or
+            game = game.UpdatePlayer(input.HealTargetName, p => p.Tag(WitchRole.HealedByWitch));
+            // or
+            game = game.TagPlayer(input.HealTargetName, WitchRole.HealedByWitch);
+
+            game.UpdatePlayer(ActingPlayer, p => p.UpdateRole<WitchRole>(r => r.UpdateHealSpellCount(-1)));
+        }
+
+        if (input.KillTargetName is not null)
+        {
+            // same here
+        }
+
         return game;
     }
 }
@@ -98,13 +145,25 @@ public interface IAction<out TInputRequest, in TInputResponse>
     where TInputRequest : IInputRequest
     where TInputResponse : IInputResponse
 {
-    TInputRequest GetInputRequest();
+    TInputRequest GetInputRequest(IGame game);
     IGame Do(IGame game, TInputResponse input);
 }
 
 public interface IAction
 {
-    IInputRequest GetInputRequest();
+    // Player that caused the action or null if multiple. Doesn't really matter, the action just needs to know what it can expect.
+    string? ActingPlayer { get; }
+
+    /// Get appropriate input request with parameters set according to the state of the game passed as parameter.
+    IInputRequest GetInputRequest(IGame game);
+    
+    /// Transform the given game with the given input into a new game.
+    // The game given here to transform should be the same as the one given when asking for the request (otherwise you
+    // might run into trouble) but storing a reference to a game is probably a bad idea because basically all modifications
+    // of the game result in a new instance. Either we always recreate all actions and make sure they point to the new
+    // instance (we need to do that for everything that holds a reference, not just actions). It would be safer to use
+    // but more complex and difficult to implement. Either way, changes to a game between handing out an input request
+    // and applying the returned response, invalidate the action and are to be prevented somehow.
     IGame Do(IGame game, IInputResponse input);
 }
 
@@ -112,19 +171,23 @@ public abstract class Action<TInputRequest, TInputResponse> : IAction<TInputRequ
     where TInputRequest : IInputRequest
     where TInputResponse : IInputResponse
 {
-    public abstract TInputRequest GetInputRequest();
-    public virtual IGame Do(IGame game, TInputResponse input) => ((IAction)this).Do(game, input);
+    public string? ActingPlayer { get; }
 
-    IInputRequest IAction.GetInputRequest() => GetInputRequest();
-    IGame IAction.Do(IGame game, IInputResponse input) => input.Transform(game);
+    protected Action(string? actingPlayer)
+    {
+        ActingPlayer = actingPlayer;
+    }
     
-    /* downcast solution
-    IGame IAction.Do(IInputResponse input)
+    public abstract TInputRequest GetInputRequest(IGame game);
+    public abstract IGame Do(IGame game, TInputResponse input);
+
+    IInputRequest IAction.GetInputRequest(IGame game) => GetInputRequest(game);
+    
+    IGame IAction.Do(IGame game, IInputResponse input)
     {
         if (input is TInputResponse response)
-            return Do(response);
+            return Do(game, response);
 
-        throw new ArgumentException("The input response has an incompatible type.", nameof(input));
+        throw new ArgumentException($"The input response has an incompatible type. Requires {typeof(TInputResponse).Name}", nameof(input));
     }
-    */
 }
