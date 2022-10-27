@@ -13,13 +13,17 @@ public interface IAction
     // Player that caused the action or null if multiple. Doesn't really matter, the action just needs to know what it can expect.
     string? ActingPlayer { get; }
     
-    /// Types of actions that need to be run before this one
+    // TODO I think it makes much more sense to just have an order of roles for which a default is provided by the package
+    // and adjustments can be made if necessary. This would shift this dependency stuff from actions to roles which is
+    // probably enough validation for this project. And coming to think of it, I think we can just throw these dependencies
+    // out for now, that's not a feature required for a prototype. So document, then scrap it!
+    
+    /// Types of actions that need to be run before this one. If there's no action 
     // That's the only thing we need I believe because most actions have no dependency on others because they are just
     // tagging players and that can happen independently. The dependencies are for when the input request is dependent
-    // on the input response of a previous action.
-    // A few things that would be nice for the action ordering:
-    // - being consistent, e.g. using the same base order if there are no dependencies (alphabetically or whatever)
-    // - being able to provide a base order which is just used (with all the actions that are present obv.) as long as no dependency is violated
+    // on the input response of a previous action (e.g. Witch's InputRequest depends on the target the Werewolves chose).
+    // Note that this is only for validation. A default order of roles is provided by the package and can be adjusted
+    // if new roles are added or a specialized order is required. No need for a complex algorithm.
     IReadOnlyCollection<Type> BeforeActionDependencies { get; }
 
     /// Get appropriate input request with parameters set according to the state of the game passed as parameter.

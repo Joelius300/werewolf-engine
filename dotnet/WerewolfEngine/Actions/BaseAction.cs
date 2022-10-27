@@ -6,9 +6,12 @@ public abstract class BaseAction<TInputRequest, TInputResponse> : IAction<TInput
 {
     public string? ActingPlayer { get; }
 
-    protected BaseAction(string? actingPlayer)
+    public virtual IReadOnlyCollection<Type> BeforeActionDependencies { get; }
+
+    protected BaseAction(string? actingPlayer, IEnumerable<Type>? beforeActionDependencies = null)
     {
         ActingPlayer = actingPlayer;
+        BeforeActionDependencies = beforeActionDependencies?.ToArray() ?? Array.Empty<Type>();
     }
 
     public abstract TInputRequest GetInputRequest(IGame game);
