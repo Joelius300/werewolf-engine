@@ -1,30 +1,27 @@
+using WerewolfEngine.State;
+
 namespace WerewolfEngine.Actions;
 
 public abstract class BaseAction<TInputRequest, TInputResponse> : IAction<TInputRequest, TInputResponse>, IAction
     where TInputRequest : IInputRequest
     where TInputResponse : IInputResponse
 {
-    public string? ActingPlayer { get; }
+    public Type InputRequestType => typeof(TInputRequest);
+    public Type InputResponseType => typeof(TInputResponse);
+    
+    public abstract TInputRequest GetInputRequest(GameState game);
+    public abstract GameState Transform(GameState game, TInputResponse input);
 
-    public virtual IReadOnlyCollection<Type> BeforeActionDependencies { get; }
+    IInputRequest IAction.GetInputRequest(GameState game) => GetInputRequest(game);
 
-    protected BaseAction(string? actingPlayer, IEnumerable<Type>? beforeActionDependencies = null)
-    {
-        ActingPlayer = actingPlayer;
-        BeforeActionDependencies = beforeActionDependencies?.ToArray() ?? Array.Empty<Type>();
-    }
-
-    public abstract TInputRequest GetInputRequest(IGame game);
-    public abstract IGame Do(IGame game, TInputResponse input);
-
-    IInputRequest IAction.GetInputRequest(IGame game) => GetInputRequest(game);
-
-    IGame IAction.Do(IGame game, IInputResponse input)
+    GameState IAction.Transform(GameState game, IInputResponse input)
     {
         if (input is TInputResponse response)
-            return Do(game, response);
+            return Transform(game, response);
 
         throw new ArgumentException(
             $"The input response has an incompatible type. Requires {typeof(TInputResponse).Name}", nameof(input));
     }
+
+    public IAction ToPlainAction() => this;
 }

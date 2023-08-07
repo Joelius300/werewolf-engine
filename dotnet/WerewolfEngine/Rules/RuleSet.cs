@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using WerewolfEngine.State;
 
 namespace WerewolfEngine.Rules;
 
@@ -157,6 +158,31 @@ public sealed class RuleSet
                                             $"{string.Join(", ", allMatchingRules)} opening the branches " +
                                             $"{VisualizeBranches(playerTags, allCollapsedDistinct)} collapsing into " +
                                             $"multiple distinct end results: {string.Join(", ", allFullyCollapsedDistinct)}");
+    }
+
+    public Player TransformAccordingToMasterTags(Player player)
+    {
+        if (!player.Tags.IsFullyCollapsed())
+            throw new InvalidOperationException("Cannot transform player according to master tags if their" +
+                                                "tag set is not fully collapsed.");
+        
+        switch (player.Tags.Count)
+        {
+            case 0:
+                return player;
+            case 1:
+                if (player.Tags.Single() == MasterTag.Killed)
+                    return player with
+                    {
+                        State = PlayerState.Dead,
+                        Tags = new TagSet()
+                    };
+                else goto default;
+            default:
+                throw new NotImplementedException("The fully collapsed TagSet cannot be handled by the game " +
+                                                  "rules yet: " +
+                                                  player.Tags);
+        }
     }
 
     private IEnumerable<Rule> EnumerateAllRules() =>

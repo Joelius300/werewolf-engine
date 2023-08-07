@@ -4,6 +4,6 @@ namespace WerewolfEngine;
 
 public interface IGame
 {
-    IInputRequest GetCurrentInputRequest();
-    IGame Advance(IInputResponse inputResponse);
+    IInputRequest? GetCurrentInputRequest();
+    void Advance(IInputResponse inputResponse);
 }

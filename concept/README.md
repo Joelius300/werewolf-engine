@@ -62,7 +62,8 @@ Here the werewolf has voted that `P1-villager` should be killed.
 Now the GM app would take the current action `witch_heal-or-kill` and query the GM for what
 the witch wants to do. All the information needed can be found in the game state, namely the tags
 where the "killed_by_werewolves" tag can be found. It might make sense to have a helper function
-on the action that fetches the name of the werewolf-target from the tags so that the GM app doesn't
+on the action that fetches the name of the werewolf-target from the tags, packages that into an input
+request and returns it, so that the GM app doesn't
 have to that on its own. The GM app would then present the three options, heal, kill or do nothing
 and gather the input of the GM in a response struct.
 
