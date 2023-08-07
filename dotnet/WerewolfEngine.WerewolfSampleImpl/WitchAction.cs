@@ -1,16 +1,11 @@
 using WerewolfEngine.Actions;
+using WerewolfEngine.State;
 
-namespace WerewolfEngine.Werewolf;
+namespace WerewolfEngine.WerewolfSampleImpl;
 
 public class WitchAction : BaseAction<WitchInputRequest, WitchInputResponse>
 {
-    private new string ActingPlayer => base.ActingPlayer!;
-
-    public WitchAction(string witch) : base(witch)
-    {
-    }
-    
-    public override WitchInputRequest GetInputRequest(IGame game)
+    public override WitchInputRequest GetInputRequest(GameState game)
     {
         var witch = game.GetPlayer(ActingPlayer);
         var role = witch.GetRole<WitchRole>();
@@ -18,7 +13,7 @@ public class WitchAction : BaseAction<WitchInputRequest, WitchInputResponse>
         return new WitchInputRequest(role.HealSpellCount, role.KillSpellCount);
     }
 
-    public override IGame Do(IGame game, WitchInputResponse input)
+    public override GameState Transform(GameState game, WitchInputResponse input)
     {
         if (input.HealTargetName is not null)
         {

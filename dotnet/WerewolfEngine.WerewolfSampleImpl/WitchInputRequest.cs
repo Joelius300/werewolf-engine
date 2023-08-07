@@ -1,5 +1,5 @@
 using WerewolfEngine.Actions;
 
-namespace WerewolfEngine.Werewolf;
+namespace WerewolfEngine.WerewolfSampleImpl;
 
 public record WitchInputRequest(int HealSpellCount, int KillSpellCount) : IInputRequest;

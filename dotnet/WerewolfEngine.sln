@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WerewolfEngine.Tests", "Wer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground", "Playground\Playground.csproj", "{509167FE-CEDC-40DF-835C-DF41D0B1051C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WerewolfEngine.Werewolf", "WerewolfEngine.Werewolf\WerewolfEngine.Werewolf.csproj", "{7F6A6389-7B38-4D70-B72A-167CCD8EC961}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WerewolfEngine.WerewolfSampleImpl", "WerewolfEngine.WerewolfSampleImpl\WerewolfEngine.WerewolfSampleImpl.csproj", "{7F6A6389-7B38-4D70-B72A-167CCD8EC961}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
