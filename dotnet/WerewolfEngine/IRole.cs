@@ -3,6 +3,10 @@ using WerewolfEngine.State;
 
 namespace WerewolfEngine;
 
+/// <summary>
+/// A role that has certain actions. Each player has one or more roles.
+/// Must be implemented immutably.
+/// </summary>
 public interface IRole
 {
     public string Name { get; }

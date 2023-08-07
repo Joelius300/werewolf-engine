@@ -127,7 +127,7 @@ public class Game : IGame
         if (state.State != GameActionState.AwaitingWinConditionEvaluation)
             throw new InvalidOperationException("Not awaiting win condition evaluation");
         
-        foreach (var faction in GetFactionsInPlay(state))
+        foreach (var faction in state.GetFactionsInPlay())
         {
             if (faction.HasWon(state))
             {
@@ -165,12 +165,12 @@ public class Game : IGame
         var actions = new List<IAction>();
         
         if (state.Phase == GamePhase.Day)
-            actions.Add(new DayVotingAction());
+            actions.Add(new DayVotingAction(GodRole.Instance));
         
         // TODO here roles need to be ordered according to some role order as stored in the game or maybe ruleset class
         // Also somehow de-duplication of werewolf actions needs to be implemented. Might be possible to hard-code, I
         // don't think there are other roles like it.
-        foreach (var role in GetRolesInPlay(state))
+        foreach (var role in state.GetRolesInPlay())
         {
             var action = state.Phase == GamePhase.Night ? role.GetNightAction(state) : role.GetDayAction(state);
             
@@ -187,9 +187,4 @@ public class Game : IGame
     }
 
     // could be extension methods
-    private static IEnumerable<IFaction> GetFactionsInPlay(GameState gameState) =>
-        gameState.Players.Select(p => p.ActiveFaction).Distinct();
-    
-    private static IEnumerable<IRole> GetRolesInPlay(GameState gameState) =>
-        gameState.Players.SelectMany(p => p.Roles);
 }

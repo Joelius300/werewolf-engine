@@ -3,8 +3,12 @@ using WerewolfEngine.State;
 
 namespace WerewolfEngine;
 
-public class DayVotingAction : BaseAction<UnitInputRequest, DayVotingInputResponse>
+public class DayVotingAction : BaseAction<GodRole, UnitInputRequest, DayVotingInputResponse>
 {
+    public DayVotingAction(GodRole originRole) : base(originRole)
+    {
+    }
+    
     public override UnitInputRequest GetInputRequest(GameState game) => new();
 
     public override GameState Transform(GameState game, DayVotingInputResponse input)

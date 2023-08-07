@@ -3,14 +3,18 @@ using WerewolfEngine.State;
 
 namespace WerewolfEngine.WerewolfSampleImpl;
 
-public class WitchAction : BaseAction<WitchInputRequest, WitchInputResponse>
+public class WitchAction : BaseAction<WitchRole, WitchInputRequest, WitchInputResponse>
 {
+    public WitchAction(WitchRole originRole) : base(originRole)
+    {
+    }
+    
     public override WitchInputRequest GetInputRequest(GameState game)
     {
-        var witch = game.GetPlayer(ActingPlayer);
-        var role = witch.GetRole<WitchRole>();
-
-        return new WitchInputRequest(role.HealSpellCount, role.KillSpellCount);
+        // TODO: The HealSpellCount and the KillSpellCount MUST be taken from the
+        // passed game state. Probably by making OriginRole just an accessor that allows
+        // getting the correct role from the new GameState.
+        return new WitchInputRequest(OriginRole.HealSpellCount, OriginRole.KillSpellCount);
     }
 
     public override GameState Transform(GameState game, WitchInputResponse input)
