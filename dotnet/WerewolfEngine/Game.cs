@@ -13,16 +13,18 @@ public class Game : IGame
 
     public Game(PlayerCircle players, RuleSet ruleSet)
     {
+        RuleSet = ruleSet;
         State = new GameState(
-            GamePhase.Day,
-            0,
+            GamePhase.Night,
+            1,
             GameActionState.AwaitingActionGathering,
             Winner: null,
             players,
             CurrentAction: null,
             NextActions: ImmutableList<IAction>.Empty
         );
-        RuleSet = ruleSet;
+
+        State = DoActionGathering(State);
     }
     
     public IInputRequest GetCurrentInputRequest()
