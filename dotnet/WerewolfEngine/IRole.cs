@@ -9,5 +9,5 @@ public interface IRole
     
     // something something get action (see L127 in the messy dotnet Program.cs for ideas)
     public IAction? GetNightAction(GameState game);
-    public IAction? GetDayAction(GameState game);
+    public IAction? GetDayAction(GameState game) => null;  // most actions do not have a day action
 }
