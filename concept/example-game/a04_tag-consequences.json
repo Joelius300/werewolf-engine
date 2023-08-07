@@ -1,0 +1,42 @@
+{
+  "Phase": "Night",
+  "Round": 1,
+  "State": "AwaitingWinConditionEvaluation",
+  "Players": [
+    {
+      "Name": "P1-villager",
+      "State": "Dead",
+      "Tags": [],
+      "Roles": [
+        { "name": "villager" }
+      ],
+      "Factions": [
+        "village"
+      ]
+    },
+    {
+      "Name": "P2-witch",
+      "State": "Alive",
+      "Tags": [],
+      "Roles": [
+        { "name": "witch", "heal_spells": 1, "kill_spells": 0 }
+      ],
+      "Factions": [
+        "village"
+      ]
+    },
+    {
+      "Name": "P3-werewolf",
+      "State": "Dead",
+      "Tags": [],
+      "Roles": [
+        { "name": "werewolf" }
+      ],
+      "Factions": [
+        "werewolves"
+      ]
+    }
+  ],
+  "CurrentAction": null,
+  "NextActions": []
+}
