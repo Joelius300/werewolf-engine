@@ -5,7 +5,7 @@ namespace WerewolfEngine;
 
 public class DayVotingAction : BaseAction<GodRole, UnitInputRequest, DayVotingInputResponse>
 {
-    public DayVotingAction(GodRole originRole) : base(originRole)
+    public DayVotingAction() : base(GodRole.Accessor)
     {
     }
     

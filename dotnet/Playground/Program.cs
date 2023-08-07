@@ -1,4 +1,6 @@
-﻿using WerewolfEngine.Rules;
+﻿using WerewolfEngine;
+using WerewolfEngine.Rules;
+using WerewolfEngine.State;
 
 Rules();
 
@@ -154,4 +156,14 @@ void Rules()
     Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
     tags = new(KilledByWerewolf, HealedByWitch, ProtectedByGuardian);
     Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
+}
+
+void SampleImpl()
+{
+    PlayerCircle players = new PlayerCircle(new []
+    {
+        // TODO
+    });
+    RuleSet rules = null!;
+    IGame game = new Game(players, rules);
 }

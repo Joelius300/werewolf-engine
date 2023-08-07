@@ -11,12 +11,19 @@ public class Game : IGame
     public GameState State { get; private set; }
     public RuleSet RuleSet { get; private set; }
 
-    // TODO initialization (constructor) of game with ruleset and initial state
-    // public Game(void things)
-    // {
-    //     State = new(GamePhase.Night,
-    //         1, GameActionState.AwaitingInput, )
-    // }
+    public Game(PlayerCircle players, RuleSet ruleSet)
+    {
+        State = new GameState(
+            GamePhase.Day,
+            0,
+            GameActionState.AwaitingActionGathering,
+            Winner: null,
+            players,
+            CurrentAction: null,
+            NextActions: ImmutableList<IAction>.Empty
+        );
+        RuleSet = ruleSet;
+    }
     
     public IInputRequest GetCurrentInputRequest()
     {
@@ -103,7 +110,7 @@ public class Game : IGame
         return state with
         {
             State = GameActionState.AwaitingTagConsequences,
-            Players = state.Players.Select(p => p with {Tags = ruleSet.Collapse(p.Tags)}).ToImmutableList()
+            Players = new PlayerCircle(state.Players.Select(p => p with {Tags = ruleSet.Collapse(p.Tags)}))
         };
     }
     
@@ -116,7 +123,7 @@ public class Game : IGame
         return state with
         {
             State = GameActionState.AwaitingWinConditionEvaluation,
-            Players = state.Players.Select(ruleSet.TransformAccordingToMasterTags).ToImmutableList()
+            Players = new PlayerCircle(state.Players.Select(ruleSet.TransformAccordingToMasterTags))
         };
     }
 
@@ -165,7 +172,7 @@ public class Game : IGame
         var actions = new List<IAction>();
         
         if (state.Phase == GamePhase.Day)
-            actions.Add(new DayVotingAction(GodRole.Instance));
+            actions.Add(new DayVotingAction());
         
         // TODO here roles need to be ordered according to some role order as stored in the game or maybe ruleset class
         // Also somehow de-duplication of werewolf actions needs to be implemented. Might be possible to hard-code, I
@@ -185,6 +192,4 @@ public class Game : IGame
             NextActions = actions.Skip(1).ToImmutableList()
         };
     }
-
-    // could be extension methods
 }
