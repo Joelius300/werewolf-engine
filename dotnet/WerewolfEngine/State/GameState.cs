@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 using WerewolfEngine.Actions;
 
 namespace WerewolfEngine.State;
@@ -12,7 +13,7 @@ public record GameState(
     IAction? CurrentAction,
     IImmutableList<IAction> NextActions)
 {
-    /* Although sexy, they don't work for the generic role accessor which is a bummer so let's confuse ourselves.
+    /* Although sexy, they don't work for the generic role accessor which is a bummer so let's not confuse ourselves.
     public Player this[PlayerAccessor accessor] => accessor.GetFrom(this);
     public IRole this[RoleAccessor accessor] => accessor.GetFrom(this);
     */

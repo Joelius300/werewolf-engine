@@ -65,7 +65,7 @@ public sealed class PlayerCircle : IImmutableList<Player>
     
     public PlayerCircle UpdatePlayer(string name, Player newValue) => SetItem(_nameIndexLookup[name], newValue);
     public PlayerCircle UpdatePlayer(Player updatedPlayer) => UpdatePlayer(updatedPlayer.Name, updatedPlayer);
-
+    public PlayerCircle UpdatePlayer(string name, Func<Player, Player> updater) => UpdatePlayer(name, updater(this[name]));
 
     IImmutableList<Player> IImmutableList<Player>.Add(Player value) => Add(value);
     IImmutableList<Player> IImmutableList<Player>.AddRange(IEnumerable<Player> items) => AddRange(items);

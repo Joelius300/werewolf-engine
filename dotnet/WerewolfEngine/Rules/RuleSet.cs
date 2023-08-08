@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using WerewolfEngine.State;
 
@@ -17,8 +18,10 @@ public sealed class RuleSet
     private readonly IDictionary<uint, ICollection<Rule>> _nonExplicitRules; // sorted by priority DESC
     private readonly int _numberOfRules;
     private readonly TagSet _potentiallyHandledTags = new(MasterTag.AllMasterTags());
+    
+    public IReadOnlyDictionary<string, int> RoleOrder { get; }
 
-    public RuleSet(IEnumerable<Rule> rules)
+    public RuleSet(IEnumerable<Rule> rules, IEnumerable<string> roleOrder)
     {
         _explicitRules = new Dictionary<uint, ICollection<Rule>>();
         _nonExplicitRules = new SortedDictionary<uint, ICollection<Rule>>(Comparer<uint>.Create((x, y) => y.CompareTo(x)));
@@ -57,6 +60,8 @@ public sealed class RuleSet
                 $"Rule {problematicRule} transforms into a set featuring the tags " +
                 $"{problematicRule.To.Except(_potentiallyHandledTags)} which cannot be handled by any rule in this ruleset.",
                 nameof(rules));
+
+        RoleOrder = roleOrder.Select(KeyValuePair.Create).ToImmutableDictionary();
     }
 
     /// Collapses a given set of tags according to the rules defined by this ruleset. If this function returns a tagset,

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using WerewolfEngine.Rules;
 
 namespace WerewolfEngine.State;
@@ -6,7 +7,14 @@ public record Player(
     string Name,
     PlayerState State,
     TagSet Tags,
-    IReadOnlyList<IRole> Roles,
-    IFaction ActiveFaction);
+    IImmutableList<IRole> Roles,
+    IFaction ActiveFaction)
+{
+    public Player(string name, IRole role) : this(name, PlayerState.Alive, new TagSet(), ImmutableArray.Create(role), role.Faction)
+    {
+    }
     
-// TODO constructor or factory method for simple initialization of player with just a name and a role.
+    public Player(string name, IRoleBlueprint roleBlueprint) : this(name, roleBlueprint.Build(name))
+    {
+    }
+}
