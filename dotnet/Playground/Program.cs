@@ -195,7 +195,15 @@ void SampleImpl()
     var jsonOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        Converters = {new JsonTypeConverter(), new JsonStringEnumConverter()}
+        Converters =
+        {
+            new JsonTypeConverter(),
+            new JsonStringEnumConverter(),
+            new JsonConcreteTypeConverter<IRole>(),
+            new JsonConcreteTypeConverter<IFaction>(),
+            new JsonConcreteTypeConverter<IAction>(),
+            new JsonGenericActionConverterFactory()
+        },
         // TODO actual deep polymorphic serialization, e.g. role isn't serialized polymorphically
     };
     string Serialize(object obj) => JsonSerializer.Serialize(obj, jsonOptions);
@@ -214,28 +222,28 @@ void SampleImpl()
         Console.WriteLine($"Inputting response of type '{type.FullName}':");
         Console.WriteLine(Serialize(response));
         Console.WriteLine();
-        
+
         game.Advance(response);
-        
+
         Console.WriteLine("Game state after input:");
         Console.WriteLine(Serialize(game.State));
         Console.WriteLine();
     }
 
     // Scripted actions to simulate example a from concept
-    
+
     Console.WriteLine("Initial game state");
     Console.WriteLine(Serialize(game.State));
     Console.WriteLine();
-        
+
     PrintRequest(game.GetCurrentInputRequest());
-    
+
     SubmitInput(new WerewolfInputResponse("P1-villager"));
-    
+
     PrintRequest(game.GetCurrentInputRequest());
-    
+
     SubmitInput(new WitchInputResponse(null, "P3-werewolf"));
-    
+
     Console.WriteLine("Final game state");
     Console.WriteLine(Serialize(game.State));
 }
@@ -251,4 +259,42 @@ class JsonTypeConverter : JsonConverter<Type>
     {
         writer.WriteStringValue(value.FullName);
     }
+}
+
+class JsonConcreteTypeConverter<T> : JsonConverter<T>
+    where T : class
+{
+    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+    }
+}
+
+class JsonGenericActionConverterFactory : JsonConverterFactory
+{
+    public override bool CanConvert(Type typeToConvert)
+    {
+        if (!typeToConvert.IsGenericType)
+            return false;
+
+        return typeToConvert.GetGenericTypeDefinition() == typeof(IAction<,>);
+    }
+
+    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        return (JsonConverter?) Activator.CreateInstance(
+            typeof(JsonGenericActionConverter<,>).MakeGenericType(typeToConvert.GetGenericArguments()));
+    }
+}
+
+class JsonGenericActionConverter<TInputRequest, TInputResponse> : JsonConcreteTypeConverter<
+    IAction<TInputRequest, TInputResponse>>
+    where TInputRequest : IInputRequest
+    where TInputResponse : IInputResponse
+{
 }
