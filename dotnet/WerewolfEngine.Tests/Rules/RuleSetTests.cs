@@ -7,7 +7,7 @@ public class RuleSetTests
     [Fact]
     public void CannotConstructEmptyRuleset()
     {
-        Assert.Throws<ArgumentException>("rules", () => new RuleSet(Array.Empty<Rule>()));
+        Assert.Throws<ArgumentException>("rules", () => new RuleSet(Array.Empty<Rule>(), Array.Empty<string>()));
     }
 
     [Theory]
@@ -19,7 +19,7 @@ public class RuleSetTests
         var rules = FromTuples(("ABC", "AB", @explicit), ("ABC", "AC", @explicit));
 
         // Act & Assert
-        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
+        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules, Array.Empty<string>()));
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class RuleSetTests
         var rules = FromTuples(("ABC", "AB", true), ("ABC", "", true));
 
         // Act & Assert
-        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
+        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules, Array.Empty<string>()));
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class RuleSetTests
         var rules = FromTuples(("AB", "B", false), ("AC", "AB", false));
 
         // Act
-        var ruleSet = new RuleSet(rules);
+        var ruleSet = new RuleSet(rules, Array.Empty<string>());
 
         // Assert
         Assert.NotNull(ruleSet);
@@ -52,7 +52,7 @@ public class RuleSetTests
         var rules = FromTuples(("AB", "B", false), ("AC", "C", false));
 
         // Act
-        var ruleSet = new RuleSet(rules);
+        var ruleSet = new RuleSet(rules, Array.Empty<string>());
 
         // Assert
         Assert.NotNull(ruleSet);
@@ -65,7 +65,7 @@ public class RuleSetTests
         var rules = FromTuples(("ABC", "AB", true), ("CBA", "D", true));
 
         // Act & Assert
-        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules));
+        Assert.Throws<ArgumentException>("rules", () => new RuleSet(rules, Array.Empty<string>()));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class RuleSetTests
     {
         // Arrange
         var rules = FromTuples(("ABC", "", true), ("AB", "A", false)).ToArray();
-        RuleSet ruleSet = new(rules);
+        RuleSet ruleSet = new(rules, Array.Empty<string>());
         var playerTags = CharsAsTags("ABC");
 
         // Act
@@ -94,7 +94,7 @@ public class RuleSetTests
                 ("AC", "AD", false), // ABC -> ABD
                 ("AB", "A", false), // ABD -> AD
                 ("AD", "", true) // AD -> ''
-            )
+            ), Array.Empty<string>()
         );
         var playerTags = CharsAsTags("ABCD");
 
@@ -115,7 +115,7 @@ public class RuleSetTests
                 ("AB", "", false),
                 ("A", "", false),
                 ("E", "", true)
-            )
+            ), Array.Empty<string>()
         );
         // the only way to collapse this is ABCDE -> E -> '', all the other rules would lead nowhere so if it doesn't
         // throw it was successful and chose the correct rule to apply.
@@ -137,7 +137,7 @@ public class RuleSetTests
                 ("AB", "B", false),
                 ("AC", "C", false),
                 ("BC", "", true) // fully collapse BC
-            )
+            ), Array.Empty<string>()
         );
         var playerTags = CharsAsTags("ABC");
         /* This can collapse either through
@@ -165,7 +165,7 @@ public class RuleSetTests
                 ("AD", "", true),
                 ("ACD", "CD", false), // ABCD -> BCD
                 ("BCD", "", true)
-            )
+            ), Array.Empty<string>()
         );
         var playerTags = CharsAsTags("ABCD");
         /* This can collapse either through
@@ -195,7 +195,7 @@ public class RuleSetTests
             )
             .ToList();
         rules.Add(new Rule(CharsAsTags("AD"), new(MasterTag.Killed), true));
-        var ruleSet = new RuleSet(rules);
+        var ruleSet = new RuleSet(rules, Array.Empty<string>());
         var playerTags = CharsAsTags("ABCD");
         /* This can collapse either through
          * ABCD -> ACD -> AD -> killed
@@ -228,7 +228,7 @@ public class RuleSetTests
     public void Collapse_ThrowsIfTagDoesntExistInAnyRule()
     {
         // Arrange
-        RuleSet ruleSet = new(FromTuples(("ABC", "", true)));
+        RuleSet ruleSet = new(FromTuples(("ABC", "", true)), Array.Empty<string>());
         var playerTags = CharsAsTags("ABCD");
 
         // Act & Assert
@@ -239,7 +239,7 @@ public class RuleSetTests
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundImmediately()
     {
         // Arrange
-        RuleSet ruleSet = new(FromTuples(("ABC", "", true)));
+        RuleSet ruleSet = new(FromTuples(("ABC", "", true)), Array.Empty<string>());
         var playerTags = CharsAsTags("AB");
 
         // Act & Assert
@@ -250,7 +250,7 @@ public class RuleSetTests
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundAfterMatchingExplicitRule()
     {
         // Arrange
-        RuleSet ruleSet = new(FromTuples(("ABC", "AB", true)));
+        RuleSet ruleSet = new(FromTuples(("ABC", "AB", true)), Array.Empty<string>());
         var playerTags = CharsAsTags("ABC");
 
         // Act & Assert
@@ -261,7 +261,7 @@ public class RuleSetTests
     public void Collapse_ThrowsWhenNoMatchingRuleCanBeFoundAfterMatchingNonExplicitRule()
     {
         // Arrange
-        RuleSet ruleSet = new(FromTuples(("AB", "B", false)));
+        RuleSet ruleSet = new(FromTuples(("AB", "B", false)), Array.Empty<string>());
         var playerTags = CharsAsTags("ABC");
 
         // Act & Assert
@@ -282,6 +282,6 @@ public class RuleSetTests
             ("AC", "AD", false),
             ("AB", "A", false),
             ("AD", "", true)
-        )
+        ), Array.Empty<string>()
     );
 }
