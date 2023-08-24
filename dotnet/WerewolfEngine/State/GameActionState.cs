@@ -6,6 +6,7 @@ public enum GameActionState
     AwaitingTagCollapse,
     AwaitingTagConsequences,
     AwaitingWinConditionEvaluation,
+    AwaitingPhaseAdvancement,
     AwaitingActionGathering,
     GameEnded
 }

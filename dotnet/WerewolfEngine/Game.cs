@@ -45,9 +45,18 @@ public class Game : IGame
     public void Advance(IInputResponse inputResponse)
     {
         State = DoCurrentAction(State, inputResponse);
+
+        while (State.State != GameActionState.AwaitingInput &&
+               State.State != GameActionState.GameEnded)
+            Step();
+
+        // manual stepping but that's not how you should do FSM AFAIK
+
+        /*
+        State = DoCurrentAction(State, inputResponse);
         if (State.State == GameActionState.AwaitingInput) return; // keep going
 
-        State = CollapseTags(State, RuleSet);
+        State = DoTagCollapse(State, RuleSet);
         State = DoTagConsequences(State, RuleSet);
         State = DoWinConditionEvaluation(State);
 
@@ -57,7 +66,7 @@ public class Game : IGame
         // that it's certain that the game continues (no one has won yet)
         // and that the players' states won't change anymore.
 
-        State = AdvancePhaseAndRound(State);
+        State = DoPhaseAndRoundAdvancement(State);
 
         // If it was night, it's now day, basically here is the morning where
         // the GM would announce what happened at night. Since the player states
@@ -67,6 +76,27 @@ public class Game : IGame
         State = DoActionGathering(State);
 
         // now the actions are gathered and input can be received again
+        */
+    }
+
+    public void Step(IInputResponse? input = null)
+    {
+        // maybe this check should work differently. AwaitingInput could be handled entirely separate. Also use case for step outside class?
+        if ((input is not null) != (State.State == GameActionState.AwaitingInput))
+            throw new InvalidOperationException($"State must be '{nameof(GameActionState.AwaitingInput)}' when" +
+                                                "providing an input response, and you must not provide an input if it is not.");
+
+        State = State.State switch
+        {
+            GameActionState.AwaitingInput => DoCurrentAction(State, input!),
+            GameActionState.AwaitingTagCollapse => DoTagCollapse(State, RuleSet),
+            GameActionState.AwaitingTagConsequences => DoTagConsequences(State, RuleSet),
+            GameActionState.AwaitingWinConditionEvaluation => DoWinConditionEvaluation(State),
+            GameActionState.AwaitingPhaseAdvancement => DoPhaseAndRoundAdvancement(State),
+            GameActionState.AwaitingActionGathering => DoActionGathering(State),
+            GameActionState.GameEnded => State,
+            _ => throw new InvalidOperationException($"Invalid {nameof(GameActionState)} '{State.State}'")
+        };
     }
 
     // AwaitingInput -> AwaitingInput (if more actions are ready)
@@ -104,7 +134,7 @@ public class Game : IGame
     }
 
     // AwaitingTagCollapse -> AwaitingTagConsequences
-    private static GameState CollapseTags(GameState state, RuleSet ruleSet)
+    private static GameState DoTagCollapse(GameState state, RuleSet ruleSet)
     {
         if (state.State != GameActionState.AwaitingTagCollapse)
             throw new InvalidOperationException("Not awaiting tag collapse, cannot collapse");
@@ -129,7 +159,7 @@ public class Game : IGame
         };
     }
 
-    // AwaitingWinConditionEvaluation -> AwaitingActionGathering
+    // AwaitingWinConditionEvaluation -> AwaitingPhaseAdvancement
     // AwaitingWinConditionEvaluation -> GameEnded
     private static GameState DoWinConditionEvaluation(GameState state)
     {
@@ -151,15 +181,20 @@ public class Game : IGame
 
         return state with
         {
-            State = GameActionState.AwaitingActionGathering,
+            State = GameActionState.AwaitingPhaseAdvancement,
         };
     }
 
-    private static GameState AdvancePhaseAndRound(GameState state)
+    // AwaitingPhaseAdvancement -> AwaitingActionGathering
+    private static GameState DoPhaseAndRoundAdvancement(GameState state)
     {
+        if (state.State != GameActionState.AwaitingPhaseAdvancement)
+            throw new InvalidOperationException("Not awaiting phase advancement");
+
         var wasDay = state.Phase == GamePhase.Day;
         return state with
         {
+            State = GameActionState.AwaitingActionGathering,
             Phase = wasDay ? GamePhase.Night : GamePhase.Day,
             Round = wasDay ? state.Round + 1 : state.Round
         };
