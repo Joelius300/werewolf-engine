@@ -9,7 +9,7 @@ namespace WerewolfEngine;
 public class Game : IGame
 {
     public GameState State { get; private set; }
-    public RuleSet RuleSet { get; private set; }
+    public RuleSet RuleSet { get; }
 
     public Game(PlayerCircle players, RuleSet ruleSet)
     {
@@ -82,12 +82,15 @@ public class Game : IGame
     public void Step(IInputResponse? input = null)
     {
         // maybe this check should work differently. AwaitingInput could be handled entirely separate. Also use case for step outside class?
+        // ties into this: instead of providing the input as parameter, have a 1-long "queue" where you can provide ("enqueue") an
+        // input and the DoCurrentAction just reads and clears that queue instead of taking input on Step. Details.
         if ((input is not null) != (State.State == GameActionState.AwaitingInput))
             throw new InvalidOperationException($"State must be '{nameof(GameActionState.AwaitingInput)}' when" +
                                                 "providing an input response, and you must not provide an input if it is not.");
 
         State = State.State switch
         {
+            // these methods could be (or call) virtual "OnAwaitingInput" for example that allow hooking into.
             GameActionState.AwaitingInput => DoCurrentAction(State, input!),
             GameActionState.AwaitingTagCollapse => DoTagCollapse(State, RuleSet),
             GameActionState.AwaitingTagConsequences => DoTagConsequences(State, RuleSet),
