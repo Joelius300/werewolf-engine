@@ -15,7 +15,9 @@ public class WerewolfAction : BaseAction<WerewolfRole, UnitInputRequest, Werewol
     {
         if (input.Target is null)
             return game;
-        
+
+        game.CheckAlive(input.Target);
+
         return game.TagPlayer(input.Target, WerewolfRole.KilledByWerewolves);
     }
 }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WerewolfEngine.Actions;
+using WerewolfEngine.Rules;
 
 namespace Playground;
 
@@ -43,4 +44,14 @@ internal class JsonGenericActionConverter<TInputRequest, TInputResponse> : JsonA
     where TInputRequest : IInputRequest
     where TInputResponse : IInputResponse
 {
+}
+
+internal class JsonTagConverter : JsonConverter<Tag>
+{
+    public override Tag? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+
+    public override void Write(Utf8JsonWriter writer, Tag value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.Identifier);
+    }
 }

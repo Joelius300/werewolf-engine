@@ -20,12 +20,14 @@ public class WitchAction : BaseAction<WitchRole, WitchInputRequest, WitchInputRe
     {
         if (input.HealTargetName is not null)
         {
+            game.CheckAlive(input.HealTargetName);
             game = game.TagPlayer(input.HealTargetName, WitchRole.HealedByWitch);
             game = game.UpdateRole(OriginRole, r => r with {HealSpellCount = r.HealSpellCount - 1});
         }
 
         if (input.KillTargetName is not null)
         {
+            game.CheckAlive(input.KillTargetName);
             game = game.TagPlayer(input.KillTargetName, WitchRole.KilledByWitch);
             game = game.UpdateRole(OriginRole, r => r with {KillSpellCount = r.KillSpellCount - 1});
         }

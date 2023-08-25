@@ -9,6 +9,7 @@ namespace WerewolfEngine;
 public class GodRole : IRole
 {
     private const string RoleName = "God-Role";
+    public const string KilledByVillage = "killed_by_village";
 
     /// <summary>
     /// Singleton instance of the god role

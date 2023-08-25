@@ -8,16 +8,18 @@ public class DayVotingAction : BaseAction<GodRole, UnitInputRequest, DayVotingIn
     public DayVotingAction() : base(GodRole.Accessor)
     {
     }
-    
+
     public override UnitInputRequest GetInputRequest(GameState game) => new();
 
     public override GameState Transform(GameState game, DayVotingInputResponse input)
     {
-        throw new NotImplementedException();
-        // assign "killed_by_village" tag. Henker can also have tags that work together with that.
+        if (input.VotedOutPlayer is null)
+            return game;
+
+        game.CheckAlive(input.VotedOutPlayer);
+
+        return game.TagPlayer(input.VotedOutPlayer, GodRole.KilledByVillage);
     }
 }
 
-public record DayVotingInputResponse(string? VotedOutPlayer) : IInputResponse
-{
-}
+public record DayVotingInputResponse(string? VotedOutPlayer) : IInputResponse;

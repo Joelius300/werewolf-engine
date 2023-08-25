@@ -22,6 +22,19 @@ public static class GameStateExtensions
     public static GameState TagPlayer(this GameState gameState, string playerName, Tag tag) =>
         gameState.UpdatePlayer(playerName, p => p.Tag(tag));
 
+    public static bool IsAlive(this GameState gameState, string playerName) =>
+        gameState.Players[playerName].State == PlayerState.Alive;
+
+    // this check is almost always necessary, some smarter way to do it would be great
+    public static void CheckAlive(this GameState gameState, string playerName)
+    {
+        if (!gameState.IsAlive(playerName))
+            throw new ArgumentException($"Player '{playerName}' is not alive!");
+    }
+
+    public static bool HasTag(this GameState gameState, string playerName, Tag tag) =>
+        gameState.Players[playerName].Tags.Contains(tag);
+
     public static GameState KillPlayer(this GameState gameState, string playerName) =>
         gameState.UpdatePlayer(playerName, p => p.Kill());
 
