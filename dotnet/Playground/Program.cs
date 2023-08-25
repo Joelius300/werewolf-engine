@@ -192,6 +192,7 @@ void SampleImpl()
     var game = new Game(players, rules);
 
 
+    // this is just to print the whole game as json with their actual types
     var jsonOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
@@ -199,12 +200,11 @@ void SampleImpl()
         {
             new JsonTypeConverter(),
             new JsonStringEnumConverter(),
-            new JsonConcreteTypeConverter<IRole>(),
-            new JsonConcreteTypeConverter<IFaction>(),
-            new JsonConcreteTypeConverter<IAction>(),
+            new JsonActualTypeConverter<IRole>(),
+            new JsonActualTypeConverter<IFaction>(),
+            new JsonActualTypeConverter<IAction>(),
             new JsonGenericActionConverterFactory()
         },
-        // TODO actual deep polymorphic serialization, e.g. role isn't serialized polymorphically
     };
     string Serialize(object obj) => JsonSerializer.Serialize(obj, jsonOptions);
 
@@ -248,34 +248,26 @@ void SampleImpl()
     Console.WriteLine(Serialize(game.State));
 }
 
-class JsonTypeConverter : JsonConverter<Type>
+internal class JsonTypeConverter : JsonConverter<Type>
 {
-    public override Type? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
+    public override Type Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
         throw new NotImplementedException();
-    }
 
-    public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
-    {
+    public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options) =>
         writer.WriteStringValue(value.FullName);
-    }
 }
 
-class JsonConcreteTypeConverter<T> : JsonConverter<T>
+internal class JsonActualTypeConverter<T> : JsonConverter<T>
     where T : class
 {
-    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
+    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
         throw new NotImplementedException();
-    }
 
-    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
-    {
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
         JsonSerializer.Serialize(writer, value, value.GetType(), options);
-    }
 }
 
-class JsonGenericActionConverterFactory : JsonConverterFactory
+internal class JsonGenericActionConverterFactory : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)
     {
@@ -285,14 +277,12 @@ class JsonGenericActionConverterFactory : JsonConverterFactory
         return typeToConvert.GetGenericTypeDefinition() == typeof(IAction<,>);
     }
 
-    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-    {
-        return (JsonConverter?) Activator.CreateInstance(
+    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+        (JsonConverter?) Activator.CreateInstance(
             typeof(JsonGenericActionConverter<,>).MakeGenericType(typeToConvert.GetGenericArguments()));
-    }
 }
 
-class JsonGenericActionConverter<TInputRequest, TInputResponse> : JsonConcreteTypeConverter<
+internal class JsonGenericActionConverter<TInputRequest, TInputResponse> : JsonActualTypeConverter<
     IAction<TInputRequest, TInputResponse>>
     where TInputRequest : IInputRequest
     where TInputResponse : IInputResponse
