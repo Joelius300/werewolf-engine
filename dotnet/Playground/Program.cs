@@ -1,12 +1,11 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Playground;
 using WerewolfEngine;
 using WerewolfEngine.Actions;
 using WerewolfEngine.Rules;
 using WerewolfEngine.State;
 using WerewolfEngine.WerewolfSampleImpl;
-
-SampleImpl();
 
 void Actions()
 {
@@ -162,7 +161,46 @@ void Rules()
     Console.WriteLine($"Collapse {tags} to {ruleSet.Collapse(tags)}: should be just nothing");
 }
 
-void SampleImpl()
+// this is just to print the whole game as json with their actual types
+var jsonOptions = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    Converters =
+    {
+        new JsonTypeConverter(),
+        new JsonStringEnumConverter(),
+        new JsonActualTypeConverter<IRole>(),
+        new JsonActualTypeConverter<IFaction>(),
+        new JsonActualTypeConverter<IAction>(),
+        new JsonGenericActionConverterFactory()
+    },
+};
+
+string Serialize(object obj) => JsonSerializer.Serialize(obj, jsonOptions);
+
+void PrintRequest(IInputRequest request)
+{
+    var type = request.GetType();
+    Console.WriteLine($"Request of type '{type.FullName}':");
+    Console.WriteLine(Serialize(request));
+    Console.WriteLine();
+}
+
+void SubmitInput(IGame game, IInputResponse response)
+{
+    var type = response.GetType();
+    Console.WriteLine($"Inputting response of type '{type.FullName}':");
+    Console.WriteLine(Serialize(response));
+    Console.WriteLine();
+
+    game.Advance(response);
+
+    Console.WriteLine("Game state after input:");
+    Console.WriteLine(Serialize(game.State));
+    Console.WriteLine();
+}
+
+void Ex_Villager_Werewolf_Witch()
 {
     var players = new PlayerCircle(new[]
     {
@@ -178,8 +216,7 @@ void SampleImpl()
             // Witch
             new Rule(new TagSet(WitchRole.HealedByWitch), new TagSet(), true),
             new Rule(new TagSet(WitchRole.KilledByWitch), new TagSet(MasterTag.Killed), true),
-            new Rule(new TagSet(WerewolfRole.KilledByWerewolves, WitchRole.HealedByWitch),
-                new TagSet(WitchRole.HealedByWitch), false)
+            new Rule(new TagSet(WerewolfRole.KilledByWerewolves, WitchRole.HealedByWitch), new TagSet(WitchRole.HealedByWitch), false)
             // no Rule for killed_by_werewolf and killed_by_witch since that can't happen in game (well that's up to the GM..)
             // in the same way healed_by_witch and killed_by_witch don't work together either (define either error or resolve)
         },
@@ -190,46 +227,7 @@ void SampleImpl()
         });
 
     var game = new Game(players, rules);
-
-
-    // this is just to print the whole game as json with their actual types
-    var jsonOptions = new JsonSerializerOptions
-    {
-        WriteIndented = true,
-        Converters =
-        {
-            new JsonTypeConverter(),
-            new JsonStringEnumConverter(),
-            new JsonActualTypeConverter<IRole>(),
-            new JsonActualTypeConverter<IFaction>(),
-            new JsonActualTypeConverter<IAction>(),
-            new JsonGenericActionConverterFactory()
-        },
-    };
-    string Serialize(object obj) => JsonSerializer.Serialize(obj, jsonOptions);
-
-    void PrintRequest(IInputRequest request)
-    {
-        var type = request.GetType();
-        Console.WriteLine($"Request of type '{type.FullName}':");
-        Console.WriteLine(Serialize(request));
-        Console.WriteLine();
-    }
-
-    void SubmitInput(IInputResponse response)
-    {
-        var type = response.GetType();
-        Console.WriteLine($"Inputting response of type '{type.FullName}':");
-        Console.WriteLine(Serialize(response));
-        Console.WriteLine();
-
-        game.Advance(response);
-
-        Console.WriteLine("Game state after input:");
-        Console.WriteLine(Serialize(game.State));
-        Console.WriteLine();
-    }
-
+    
     // Scripted actions to simulate example a from concept
 
     Console.WriteLine("Initial game state");
@@ -238,53 +236,20 @@ void SampleImpl()
 
     PrintRequest(game.GetCurrentInputRequest());
 
-    SubmitInput(new WerewolfInputResponse("P1-villager"));
+    SubmitInput(game, new WerewolfInputResponse("P1-villager"));
 
     PrintRequest(game.GetCurrentInputRequest());
 
-    SubmitInput(new WitchInputResponse(null, "P3-werewolf"));
+    SubmitInput(game, new WitchInputResponse(null, "P3-werewolf"));
 
     Console.WriteLine("Final game state");
     Console.WriteLine(Serialize(game.State));
 }
 
-internal class JsonTypeConverter : JsonConverter<Type>
-{
-    public override Type Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        throw new NotImplementedException();
+// ---------------------------------------------------
 
-    public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options) =>
-        writer.WriteStringValue(value.FullName);
-}
+Ex_Villager_Werewolf_Witch();
 
-internal class JsonActualTypeConverter<T> : JsonConverter<T>
-    where T : class
-{
-    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        throw new NotImplementedException();
 
-    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
-        JsonSerializer.Serialize(writer, value, value.GetType(), options);
-}
 
-internal class JsonGenericActionConverterFactory : JsonConverterFactory
-{
-    public override bool CanConvert(Type typeToConvert)
-    {
-        if (!typeToConvert.IsGenericType)
-            return false;
-
-        return typeToConvert.GetGenericTypeDefinition() == typeof(IAction<,>);
-    }
-
-    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
-        (JsonConverter?) Activator.CreateInstance(
-            typeof(JsonGenericActionConverter<,>).MakeGenericType(typeToConvert.GetGenericArguments()));
-}
-
-internal class JsonGenericActionConverter<TInputRequest, TInputResponse> : JsonActualTypeConverter<
-    IAction<TInputRequest, TInputResponse>>
-    where TInputRequest : IInputRequest
-    where TInputResponse : IInputResponse
-{
-}
+// ---------------------------------------------------
