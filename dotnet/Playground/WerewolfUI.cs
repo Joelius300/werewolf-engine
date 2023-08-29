@@ -1,3 +1,4 @@
+using WerewolfEngine;
 using WerewolfEngine.Actions;
 using WerewolfEngine.WerewolfSampleImpl;
 
@@ -6,23 +7,74 @@ namespace Playground;
 // very simple console app UI
 public class WerewolfUI
 {
+    private readonly Game _game;
+
+    public WerewolfUI(Game game) => _game = game;
+
     public IInputResponse GetInput(IInputRequest request) =>
         // In Rust, discrimination based on type may not be possible but require some string ID or something.
-        // I'll want to be able to register a handler anyway instead of a switch case and inside the handler
-        // the cast can happen, which should also be possible in Rust IIRC. The input request could contain
+        // I'll probably want to be able to register a handler anyway instead of a switch case and inside the handler
+        // the cast can happen, which should also be possible in Rust IIRC. Maybe that will actually be in flutter then
+        // (where the core code will still be rust, not dart, hopefully). The input request could contain
         // the action id of the starting action to discriminate because the action type and the input request type
         // (as well as response type) are 1:1 relationships.
+
+        // UnitInputRequest doesn't work, the type is the discriminator atm so you need a WerewolfInputRequest type,
+        // in Rust, if we don't discriminate by type but by id (string for example), then UnitInputRequest works again,
+        // actually, just Unit () should work.
         request switch
         {
             WitchInputRequest r => GetWitchInput(r),
-            // UnitInputRequest doesn't work, the type is the discriminator atm so you need a WerewolfInputRequest type,
-            // in Rust, if we don't discriminate by type but by id (string for example), then UnitInputRequest works again,
-            // actually, just Unit () should work.
+            WerewolfInputRequest r => GetWerewolfVote(r),
+            DayVotingInputRequest r => GetDayVote(r),
             _ => throw new NotImplementedException(),
         };
 
     private WitchInputResponse GetWitchInput(WitchInputRequest request)
     {
-        throw new NotImplementedException();
+        string? healTarget = null;
+        string? killTarget = null;
+        if (request.WerewolfTarget is not null)
+        {
+            Console.WriteLine($"Person to heal: {request.WerewolfTarget.Name}");
+            if (request.HealSpellCount > 0)
+            {
+                if (AskYesNo("Do you want to heal?"))
+                    healTarget = request.WerewolfTarget.Name;
+            }
+        }
+
+        if (request.KillSpellCount > 0)
+        {
+            killTarget = ReadString("Name of player to kill (empty=none): ");
+        }
+
+        return new(healTarget, killTarget);
+    }
+
+    private WerewolfInputResponse GetWerewolfVote(WerewolfInputRequest r)
+    {
+        var name = ReadString("Werewolves voted to kill: ");
+        return new(name);
+    }
+
+    private DayVotingInputResponse GetDayVote(DayVotingInputRequest r)
+    {
+        var name = ReadString("Villagers voted to kill: ");
+        return new(name);
+    }
+
+    private static string? ReadString(string prompt)
+    {
+        Console.Write(prompt);
+        var input = Console.ReadLine();
+
+        return string.IsNullOrWhiteSpace(input) ? null : input;
+    }
+
+    private static bool AskYesNo(string prompt)
+    {
+        Console.WriteLine(prompt + " (y/n)");
+        return Console.ReadKey(true).Key == ConsoleKey.Y;
     }
 }
