@@ -169,6 +169,13 @@ public class Game : IGame
         if (state.State != GameActionState.AwaitingWinConditionEvaluation)
             throw new InvalidOperationException("Not awaiting win condition evaluation");
 
+        if (state.Players.All(p => p.State == PlayerState.Dead))
+            return state with
+            {
+                State = GameActionState.GameEnded,
+                Winner = null
+            };
+
         foreach (var faction in state.GetFactionsInPlay())
         {
             if (faction.HasWon(state))

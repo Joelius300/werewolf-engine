@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using WerewolfEngine;
 using WerewolfEngine.Actions;
+using WerewolfEngine.State;
 using WerewolfEngine.WerewolfSampleImpl;
 
 namespace Playground;
@@ -11,7 +13,47 @@ public class WerewolfUI
 
     public WerewolfUI(Game game) => _game = game;
 
-    public IInputResponse GetInput(IInputRequest request) =>
+    public void Run()
+    {
+        Console.WriteLine($"Players: {string.Join(", ", _game.State.Players.Select(p => p.Name))}");
+        Console.WriteLine();
+        Console.WriteLine($"Round {_game.State.Round} - {_game.State.Phase}");
+        while (_game.State.State != GameActionState.GameEnded)
+        {
+            var prevState = _game.State;
+            _game.Advance(GetInput(_game.GetCurrentInputRequest()));
+            var currState = _game.State;
+
+            if (prevState.Phase != currState.Phase)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Round {_game.State.Round} - {_game.State.Phase}");
+
+                Console.WriteLine((_game.State.Phase == GamePhase.Day ? "This night" : "Today") +
+                                  " the following people died: " +
+                                  string.Join(", ", PlayersDiedThisNight(prevState, currState)));
+                Console.WriteLine();
+            }
+        }
+
+        Console.WriteLine("Game ended");
+        Console.WriteLine($"Winner: {_game.State.Winner?.Name ?? "no one"}");
+    }
+
+    // This is a bit clunky, it might be nicer not having to compare the states each time
+    // and just being able to get the list of dead players directly from the engine as gathered
+    // while it kills (e.g. in the tag consequences, the killed players are added to a list, pretty simple tbh).
+    private IEnumerable<string> PlayersDiedThisNight(GameState prevState, GameState currState)
+    {
+        foreach (var (oldPlayer, newPlayer) in prevState.Players.Zip(currState.Players))
+        {
+            Debug.Assert(oldPlayer.Name == newPlayer.Name, "oldPlayer.Name == newPlayer.Name");
+            if (newPlayer.State == PlayerState.Dead && oldPlayer.State == PlayerState.Alive)
+                yield return newPlayer.Name;
+        }
+    }
+
+    private IInputResponse GetInput(IInputRequest request) =>
         // In Rust, discrimination based on type may not be possible but require some string ID or something.
         // I'll probably want to be able to register a handler anyway instead of a switch case and inside the handler
         // the cast can happen, which should also be possible in Rust IIRC. Maybe that will actually be in flutter then
@@ -27,7 +69,7 @@ public class WerewolfUI
             WitchInputRequest r => GetWitchInput(r),
             WerewolfInputRequest r => GetWerewolfVote(r),
             DayVotingInputRequest r => GetDayVote(r),
-            _ => throw new NotImplementedException(),
+            _ => throw new NotImplementedException($"No handler for type {request.GetType().Name}"),
         };
 
     private WitchInputResponse GetWitchInput(WitchInputRequest request)
@@ -74,7 +116,9 @@ public class WerewolfUI
 
     private static bool AskYesNo(string prompt)
     {
-        Console.WriteLine(prompt + " (y/n)");
-        return Console.ReadKey(true).Key == ConsoleKey.Y;
+        Console.Write(prompt + " (y/n) ");
+        var yes = Console.ReadKey().Key == ConsoleKey.Y;
+        Console.WriteLine();
+        return yes;
     }
 }
